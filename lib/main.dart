@@ -1,40 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import './providers/auth.dart';
-import './screens/loading.dart';
-import './screens/welcome.dart';
-import './screens/overview.dart';
+import './screens/root.dart';
+import './screens/login.dart';
+import './screens/register.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final routes = {
+      LoginScreen.routeName: (context) => LoginScreen(),
+      RegisterScreen.routeName: (context) => RegisterScreen(),
+    };
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) => Auth(),
         ),
       ],
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: Consumer<Auth>(
-          builder: (_, auth, __) => auth.isAuthenticated
-              ? OverviewScreen()
-              : FutureBuilder(
-                  future: auth.restoreTokens(),
-                  builder: (_, snapshot) =>
-                      snapshot.connectionState == ConnectionState.waiting
-                          ? LoadingScreen()
-                          : WelcomeScreen(),
-                ),
-        ),
-        routes: {},
-      ),
+      child: Theme.of(context).platform == TargetPlatform.iOS
+          ? CupertinoApp(
+              title: 'Sliceit',
+              home: Root(),
+              routes: routes,
+            )
+          : MaterialApp(
+              title: 'Sliceit',
+              home: Root(),
+              routes: routes,
+            ),
     );
   }
 }

@@ -1,17 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../providers/auth.dart';
+import './login.dart';
+import './register.dart';
+import '../widgets/platform_scaffold.dart';
+import '../widgets/platform_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<Auth>(context);
-    return Scaffold(
-      body: Center(
-        child: RaisedButton(
-          child: Text('Login'),
-          onPressed: auth.login,
+    return PlatformScaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Container(),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    PlatformButton(
+                      child: Text('Login'),
+                      color: Theme.of(context).primaryColor,
+                      colorBrightness: Brightness.dark,
+                      onPressed: () => Navigator.of(context)
+                          .pushNamed(LoginScreen.routeName),
+                    ),
+                    PlatformButton(
+                      materialStyle: MaterialButtonStyle.flat,
+                      child: Text('Sign up'),
+                      onPressed: () => Navigator.of(context)
+                          .pushNamed(RegisterScreen.routeName),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

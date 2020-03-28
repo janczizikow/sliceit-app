@@ -5,6 +5,7 @@ import './platform_base.dart';
 
 class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   final bool autofocus;
+  final bool autocorrect;
   final bool obscureText;
 
   final TextInputType keyboardType;
@@ -13,7 +14,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   final Brightness keyboardAppearance;
 
   final InputDecoration decoration;
-
+  final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onSubmitted;
 
@@ -23,8 +24,10 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
     this.textInputAction,
     this.keyboardAppearance,
     this.decoration,
+    this.controller,
     this.focusNode,
     this.onSubmitted,
+    this.autocorrect = true,
     this.autofocus = false,
     this.obscureText = false,
     this.textCapitalization = TextCapitalization.none,
@@ -34,6 +37,8 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   CupertinoTextField buildCupertinoWidget(BuildContext context) {
     return CupertinoTextField(
       autofocus: autofocus,
+      autocorrect: autocorrect,
+      controller: controller,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       textCapitalization: textCapitalization,
@@ -49,6 +54,8 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   TextField buildMaterialWidget(BuildContext context) {
     return TextField(
       autofocus: autofocus,
+      autocorrect: autocorrect,
+      controller: controller,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       textCapitalization: textCapitalization,

@@ -9,6 +9,7 @@ class ApiError extends Error {
   ApiError(this.message);
 }
 
+// TODO: Convert to a singleton?
 class Api {
   static const _baseUrl = kReleaseMode
       ? 'https://sliceit.herokuapp.com/api/v1'
@@ -35,16 +36,62 @@ class Api {
           {'email': email, 'password': password},
         ),
       );
-      var result = jsonDecode(response.body);
+      var result = await compute(jsonDecode, response.body);
       if (response.statusCode == 200) {
         return result;
       } else {
-        final message =
-            (result['errors'] as List).map((error) => error['msg']).join(', ');
-        throw ApiError(message);
+        throw ApiError(_getErrorMessage(result));
       }
     } on http.ClientException {
       throw ApiError('Connection failed');
     }
+  }
+
+  Future<Map<String, dynamic>> register({
+    @required String firstName,
+    @required String lastName,
+    @required String email,
+    @required String password,
+  }) async {
+    try {
+      final response = await http.post(
+        "$_baseUrl/auth/register",
+        headers: _headers,
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'password': password,
+        }),
+      );
+      var result = await compute(jsonDecode, response.body);
+      if (response.statusCode == 200) {
+        return result;
+      } else {
+        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+      }
+    } on http.ClientException {
+      throw ApiError('Connection failed');
+    }
+  }
+
+  Future<bool> resetPassword(String email) async {
+    try {
+      final response = await http.post(
+        "$_baseUrl/auth/forgot-password",
+        headers: _headers,
+        body: jsonEncode({'email': email}),
+      );
+      if (response.statusCode == 201) {
+        return true;
+      }
+      throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+    } on http.ClientException {
+      throw ApiError('Connection failed');
+    }
+  }
+
+  String _getErrorMessage(dynamic result) {
+    return (result['errors'] as List).map((error) => error['msg']).join(', ');
   }
 }

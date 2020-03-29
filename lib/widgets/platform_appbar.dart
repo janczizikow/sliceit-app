@@ -4,15 +4,23 @@ import 'package:flutter/material.dart';
 import './platform_base.dart';
 
 class PlatformAppBar extends PlatformBase<CupertinoNavigationBar, AppBar> {
-  PlatformAppBar();
+  final Widget title;
+
+  PlatformAppBar({
+    this.title,
+  });
 
   @override
   CupertinoNavigationBar buildCupertinoWidget(BuildContext context) {
-    return CupertinoNavigationBar();
+    return CupertinoNavigationBar(
+      middle: title,
+    );
   }
 
   @override
   AppBar buildMaterialWidget(BuildContext context) {
-    return AppBar();
+    return AppBar(
+      title: title,
+    );
   }
 }

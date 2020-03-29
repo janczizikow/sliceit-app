@@ -17,7 +17,20 @@ class WelcomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: Container(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/logo.png',
+                    ),
+                    SizedBox(height: 32),
+                    Text(
+                      'Split shared expenses with ease',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.title,
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: Column(

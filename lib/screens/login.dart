@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/services/api.dart';
 
+import './forgot_password.dart';
 import '../providers/auth.dart';
 import '../widgets/platform_appbar.dart';
 import '../widgets/platform_scaffold.dart';
@@ -33,10 +34,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _forgotPassword() {
+    Navigator.of(context).pushNamed(ForgotPasswordScreen.routeName);
+  }
+
   Future<void> _authenticate() async {
     setState(() {
       _isLoading = true;
     });
+    // TODO: Validation
     String email = _emailController.text;
     String password = _passwordController.text;
     try {
@@ -49,7 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
       });
     } catch (err) {
-      print(err);
       _showErrorMessage('Failed to authenticate');
       setState(() {
         _isLoading = false;
@@ -60,7 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(
-      appBar: PlatformAppBar(),
+      appBar: PlatformAppBar(
+        title: Text('Login'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -98,6 +105,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 colorBrightness: Brightness.dark,
                 child: _isLoading ? Text('Loading...') : Text('Login'),
                 onPressed: _isLoading ? null : _authenticate,
+              ),
+              PlatformButton(
+                materialStyle: MaterialButtonStyle.flat,
+                child: Text('Forgot password?'),
+                onPressed: _forgotPassword,
               ),
             ],
           ),

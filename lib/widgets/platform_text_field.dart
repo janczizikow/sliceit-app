@@ -16,6 +16,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   final InputDecoration decoration;
   final TextEditingController controller;
   final FocusNode focusNode;
+  final VoidCallback onEditingComplete;
   final ValueChanged<String> onSubmitted;
 
   PlatformTextField({
@@ -26,6 +27,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
     this.decoration,
     this.controller,
     this.focusNode,
+    this.onEditingComplete,
     this.onSubmitted,
     this.autocorrect = true,
     this.autofocus = false,
@@ -46,6 +48,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
       // decoration: decoration, ??
       obscureText: obscureText,
       focusNode: focusNode,
+      onEditingComplete: onEditingComplete,
       onSubmitted: onSubmitted,
     );
   }
@@ -63,6 +66,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
       decoration: decoration,
       obscureText: obscureText,
       focusNode: focusNode,
+      onEditingComplete: onEditingComplete,
       onSubmitted: onSubmitted,
     );
   }

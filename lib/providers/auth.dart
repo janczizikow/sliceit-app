@@ -30,7 +30,30 @@ class Auth with ChangeNotifier {
   Future<void> login({String email, String password}) async {
     try {
       final res = await _api.login(email, password);
-      print(res);
+      await _storage.write(key: ACCESS_TOKEN_KEY, value: res['accessToken']);
+      await _storage.write(key: REFRESH_TOKEN_KEY, value: res['refreshToken']);
+      _accessToken = res['accessToken'];
+      _refreshToken = res['refreshToken'];
+      _api.accessToken = res['accessToken'];
+      notifyListeners();
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  Future<void> register({
+    @required String firstName,
+    @required String lastName,
+    @required String email,
+    @required String password,
+  }) async {
+    try {
+      final res = await _api.register(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+      );
       await _storage.write(key: ACCESS_TOKEN_KEY, value: res['accessToken']);
       await _storage.write(key: REFRESH_TOKEN_KEY, value: res['refreshToken']);
       _accessToken = res['accessToken'];

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import './providers/auth.dart';
 import './screens/root.dart';
 import './screens/login.dart';
+import './screens/forgot_password.dart';
 import './screens/register.dart';
 
 void main() => runApp(MyApp());
@@ -14,6 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final routes = {
       LoginScreen.routeName: (context) => LoginScreen(),
+      ForgotPasswordScreen.routeName: (context) => ForgotPasswordScreen(),
       RegisterScreen.routeName: (context) => RegisterScreen(),
     };
 

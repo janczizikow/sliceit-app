@@ -59,3 +59,5 @@ jobs:
           packageName: com.sliceitapp.sliceit
           releaseFile: /build/app/outputs/bundle/release/app-release.aab
           track: internal
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}

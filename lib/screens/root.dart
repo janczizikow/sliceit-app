@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import './overview.dart';
+import './home.dart';
 import './loading.dart';
 import './welcome.dart';
 import '../providers/auth.dart';
@@ -11,7 +11,7 @@ class Root extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<Auth>(
       builder: (_, auth, __) => auth.isAuthenticated
-          ? OverviewScreen()
+          ? HomeScreen()
           : FutureBuilder(
               future: auth.restoreTokens(),
               builder: (_, snapshot) =>

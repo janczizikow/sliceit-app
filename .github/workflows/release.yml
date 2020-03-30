@@ -27,11 +27,10 @@ jobs:
       image: google/dart:latest
 
     steps:
-
       - name: Download build number
         uses: actions/download-artifact@v1
-          with:
-            name: BUILD_NUMBER
+        with:
+          name: BUILD_NUMBER
       - name: Restore build number
         id: buildnumber
         uses: einaregilsson/build-number@v2

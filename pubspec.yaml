@@ -30,6 +30,7 @@ dependencies:
   flutter_platform_widgets: ^0.32.5
   flutter_secure_storage: ^3.3.1+1
   flutter_speed_dial: ^1.2.5
+  google_sign_in: ^4.4.4
   image_cropper: ^1.2.1
   image_picker: ^0.6.5
   intl: ^0.16.1

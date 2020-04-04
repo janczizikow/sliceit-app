@@ -45,6 +45,11 @@ jobs:
       - name: Set build number
         run: |
           sed -i -e "1,/+1/s/+1/+$BUILD_NUMBER/" pubspec.yaml
+      - name: Set env vars
+        run: |
+          echo "SENTRY_DNS=$SENTRY_DNS" > .env
+        env:
+          SENTRY_DNS: ${{ secrets.SENTRY_DNS }}
       - run: flutter pub get
       # - run: flutter test
       - run: flutter build appbundle
@@ -53,7 +58,6 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           ALIAS: ${{ secrets.ALIAS }}
           KEY_PATH: key.jks
-          SENTRY_DNS: ${{ secrets.SENTRY_DNS }}
       - uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}

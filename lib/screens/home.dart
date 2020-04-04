@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
+import './group.dart';
+import './settings.dart';
 import '../providers/theme.dart';
+import '../providers/groups.dart';
 import '../widgets/platform_appbar.dart';
 import '../widgets/platform_scaffold.dart';
 import '../widgets/balance_list.dart';
@@ -22,6 +25,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final groups = Provider.of<GroupsProvider>(context).groups;
+    final selectedGroup = Provider.of<GroupsProvider>(context).selectedGroup;
     // TODO: Create no splash tab bar component
     // https://stackoverflow.com/questions/50020523/how-to-disable-default-widget-splash-effect-in-flutter/58673392#58673392
     return Theme(
@@ -33,14 +38,26 @@ class _HomeScreenState extends State<HomeScreen> {
         length: 2,
         child: PlatformScaffold(
           appBar: PlatformAppBar(
-            title: Text('Sliceit'),
+            title: Text(selectedGroup.name),
             elevation: 0,
             androidCenterTitle: true,
             actions: [
               PopupMenuButton<MoreMenuOptions>(
                 tooltip: 'More',
-                // TODO: handle onSelected
-                // onSelected: (MoreMenuOptions result) {},
+                onSelected: (MoreMenuOptions result) {
+                  switch (result) {
+                    case MoreMenuOptions.settings:
+                      Navigator.of(context)
+                          .pushNamed(GroupScreen.routeName, arguments: {
+                        'groupId': selectedGroup.id,
+                        'name': selectedGroup.name,
+                        'currency': selectedGroup.currency,
+                      });
+                      break;
+                    default:
+                      return null;
+                  }
+                },
                 itemBuilder: (BuildContext context) =>
                     <PopupMenuEntry<MoreMenuOptions>>[
                   const PopupMenuItem<MoreMenuOptions>(
@@ -90,7 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.zero,
               children: <Widget>[
                 Consumer<ThemeProvider>(
-                  // TODO: Group selection
                   builder: (_, theme, __) => UserAccountsDrawerHeader(
                     otherAccountsPictures: <Widget>[
                       IconButton(
@@ -103,19 +119,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: theme.toggleTheme,
                       )
                     ],
-                    accountEmail: Text(''),
-                    accountName: Text(''),
+                    accountName: Text('Group'),
+                    accountEmail: Text(selectedGroup.name),
+                    // TODO: Group selection
+                    onDetailsPressed: groups.length > 1 ? () {} : null,
                   ),
                 ),
                 ListTile(
-                  onTap: () => {},
                   leading: Icon(Icons.group),
                   title: Text('New Group'),
+                  onTap: () {
+                    Navigator.of(context)
+                        .popAndPushNamed(GroupScreen.routeName);
+                  },
                 ),
                 ListTile(
-                  onTap: () => {},
                   leading: Icon(Icons.settings),
                   title: Text('Settings'),
+                  onTap: () {
+                    Navigator.of(context)
+                        .popAndPushNamed(SettingsScreen.routeName);
+                  },
                 ),
                 Divider(),
                 ListTile(
@@ -153,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               SpeedDialChild(
                 child: const Icon(Icons.shopping_basket),
-                onTap: () => {},
+                onTap: () {},
                 labelWidget: SpeedDialLabel(
                   title: 'New Expense',
                   subTitle: 'A purchase made for the group',

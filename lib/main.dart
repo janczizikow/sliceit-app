@@ -9,10 +9,13 @@ import 'package:sentry/sentry.dart';
 
 import './providers/auth.dart';
 import './providers/theme.dart';
+import './providers/groups.dart';
 import './screens/root.dart';
 import './screens/login.dart';
 import './screens/forgot_password.dart';
 import './screens/register.dart';
+import './screens/group.dart';
+import './screens/settings.dart';
 
 Future<Null> main() async {
   await DotEnv().load('.env');
@@ -71,6 +74,9 @@ class _MyAppState extends State<MyApp> {
       LoginScreen.routeName: (context) => LoginScreen(),
       ForgotPasswordScreen.routeName: (context) => ForgotPasswordScreen(),
       RegisterScreen.routeName: (context) => RegisterScreen(),
+      GroupScreen.routeName: (context) =>
+          GroupScreen(arguments: ModalRoute.of(context).settings.arguments),
+      SettingsScreen.routeName: (context) => SettingsScreen(),
     };
 
     return MultiProvider(
@@ -81,6 +87,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(
           create: (_) => themeProvider,
         ),
+        ChangeNotifierProvider(create: (_) => GroupsProvider())
       ],
       child: Theme.of(context).platform == TargetPlatform.iOS
           ? CupertinoApp(

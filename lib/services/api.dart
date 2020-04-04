@@ -3,27 +3,40 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/group.dart';
+
 class ApiError extends Error {
   final String message;
 
   ApiError(this.message);
+
+  @override
+  String toString() => 'ApiError:${this.message}';
 }
 
-// TODO: Convert to a singleton?
 class Api {
   static const _baseUrl = kReleaseMode
       ? 'https://sliceit.herokuapp.com/api/v1'
       : 'http://192.168.178.111:3000/api/v1';
+  static final Api _instance = Api._internal();
   var _headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
 
+  factory Api() {
+    return Api._internal();
+  }
+
+  Api._internal();
+
+  get instance => _instance;
+
   set accessToken(String accessToken) {
     if (accessToken.isEmpty) {
-      _headers.remove('Authorization');
+      instance._headers.remove('Authorization');
     } else {
-      _headers['Authorization'] = "Bearer $accessToken";
+      instance._headers['Authorization'] = "Bearer $accessToken";
     }
   }
 
@@ -31,7 +44,7 @@ class Api {
     try {
       final response = await http.post(
         "$_baseUrl/auth/login",
-        headers: _headers,
+        headers: instance._headers,
         body: jsonEncode(
           {'email': email, 'password': password},
         ),
@@ -56,7 +69,7 @@ class Api {
     try {
       final response = await http.post(
         "$_baseUrl/auth/register",
-        headers: _headers,
+        headers: instance._headers,
         body: jsonEncode({
           'firstName': firstName,
           'lastName': lastName,
@@ -79,7 +92,7 @@ class Api {
     try {
       final response = await http.post(
         "$_baseUrl/auth/forgot-password",
-        headers: _headers,
+        headers: instance._headers,
         body: jsonEncode({'email': email}),
       );
       if (response.statusCode == 201) {
@@ -93,5 +106,77 @@ class Api {
 
   String _getErrorMessage(dynamic result) {
     return (result['errors'] as List).map((error) => error['msg']).join(', ');
+  }
+
+  Future<List<Group>> fetchGroups() async {
+    // TODO: Handle pagination
+    try {
+      final response = await http.get(
+        "$_baseUrl/groups",
+        headers: instance._headers,
+      );
+      if (response.statusCode == 200) {
+        return compute(Group.parseGroups, response.body);
+      }
+      throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+    } on http.ClientException {
+      throw ApiError('Connection failed');
+    }
+  }
+
+  Future<Group> createGroup({String name, String currency}) async {
+    try {
+      final response = await http.post(
+        "$_baseUrl/groups",
+        headers: instance._headers,
+        body: jsonEncode({
+          'name': name,
+          'currency': currency,
+        }),
+      );
+      if (response.statusCode == 201) {
+        return compute(Group.parseGroup, response.body);
+      } else {
+        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+      }
+    } on http.ClientException {
+      throw ApiError('Connection failed');
+    }
+  }
+
+  Future<Group> updateGroup({String groupId, name, currency}) async {
+    try {
+      final response = await http.patch(
+        "$_baseUrl/groups/$groupId",
+        headers: instance._headers,
+        body: jsonEncode({
+          'name': name,
+          'currency': currency,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return compute(Group.parseGroup, response.body);
+      } else {
+        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+      }
+    } on http.ClientException {
+      throw ApiError('Connection failed');
+    }
+  }
+
+  Future<bool> deleteGroup(String groupId) async {
+    try {
+      final response = await http.delete(
+        "$_baseUrl/groups/$groupId",
+        headers: instance._headers,
+      );
+      if (response.statusCode == 204) {
+        return true;
+      } else {
+        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+      }
+    } on http.ClientException {
+      throw ApiError('Connection failed');
+    }
   }
 }

@@ -64,3 +64,15 @@ jobs:
           packageName: com.sliceitapp.sliceit
           releaseFile: build/app/outputs/bundle/release/app-release.aab
           track: internal
+
+  tag:
+    needs: android
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - name: git tag
+        uses: mathieudutour/github-tag-action@v4
+        env:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          dry_run: true

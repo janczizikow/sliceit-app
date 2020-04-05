@@ -1,9 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/group.dart';
+import '../utils/constants.dart';
 
 class ApiError extends Error {
   final String message;
@@ -15,48 +16,121 @@ class ApiError extends Error {
 }
 
 class Api {
-  static const _baseUrl = kReleaseMode
-      ? 'https://sliceit.herokuapp.com/api/v1'
-      : 'http://192.168.178.111:3000/api/v1';
   static final Api _instance = Api._internal();
-  var _headers = {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-  };
+  static final BaseOptions baseOptions = BaseOptions(
+    baseUrl: kReleaseMode
+        ? 'https://sliceit.herokuapp.com/api/v1'
+        : 'http://192.168.178.111:3000/api/v1',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    connectTimeout: 5000,
+    receiveTimeout: 3000,
+    contentType: 'application/json',
+  );
+  final Dio _dio = new Dio(baseOptions)..transformer = FlutterTransformer();
+  final Dio _refreshDio = new Dio(baseOptions)
+    ..transformer = FlutterTransformer();
+  final _storage = FlutterSecureStorage();
+  String accessToken;
 
   factory Api() {
-    return Api._internal();
+    return _instance;
   }
 
-  Api._internal();
+  Api._internal() {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options) async {
+          if (accessToken != null) {
+            options.headers['Authorization'] = "Bearer $accessToken";
+          }
+          return options;
+        },
+        onResponse: (Response response) async {
+          return response;
+        },
+        onError: (DioError e) async {
+          if (e.response?.statusCode == 401) {
+            RequestOptions options = e.response.request;
+            String authorizationHeader = "Bearer $accessToken";
 
-  get instance => _instance;
+            // If the token has been updated, repeat directly.
+            if (authorizationHeader != null &&
+                authorizationHeader != options.headers['Authorization']) {
+              options.headers['Authorization'] = authorizationHeader;
+              return _dio.request(options.path, options: options);
+            }
 
-  set accessToken(String accessToken) {
-    if (accessToken.isEmpty) {
-      instance._headers.remove('Authorization');
-    } else {
-      instance._headers['Authorization'] = "Bearer $accessToken";
-    }
+            String refreshToken = await _storage.read(key: REFRESH_TOKEN_KEY);
+
+            if (refreshToken != null) {
+              try {
+                // Lock to block the incoming request until the token updated
+                _dio.lock();
+                _dio.interceptors.responseLock.lock();
+                _dio.interceptors.errorLock.lock();
+
+                // request new tokens & store them
+                final refreshResponse = await _refreshDio.post('/auth/refresh',
+                    data: {'refreshToken': refreshToken});
+                await _storeTokens(
+                  accessToken: refreshResponse.data['accessToken'],
+                  refreshToken: refreshResponse.data['refreshToken'],
+                );
+
+                // update auth header with the new access token
+                accessToken = refreshResponse.data['accessToken'];
+                options.headers['Authorization'] =
+                    refreshResponse.data['accessToken'];
+
+                // unlock dio
+                _dio.unlock();
+                _dio.interceptors.responseLock.unlock();
+                _dio.interceptors.errorLock.unlock();
+
+                // repeat the request with a new options
+                return _dio.request(options.path, options: options);
+              } on DioError catch (err) {
+                switch (err.type) {
+                  case DioErrorType.CONNECT_TIMEOUT:
+                  case DioErrorType.RECEIVE_TIMEOUT:
+                    return null;
+                  default:
+                    // TODO: FORCELOGOUT
+                    return err;
+                }
+              } catch (err) {
+                // TODO: FORCELOGOUT
+                return err;
+              }
+            }
+          }
+
+          return e;
+        },
+      ),
+    );
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      final response = await http.post(
-        "$_baseUrl/auth/login",
-        headers: instance._headers,
-        body: jsonEncode(
-          {'email': email, 'password': password},
-        ),
+      final response = await _dio.post(
+        "/auth/login",
+        data: {'email': email, 'password': password},
       );
-      var result = await compute(jsonDecode, response.body);
-      if (response.statusCode == 200) {
-        return result;
+      await _storeTokens(
+          accessToken: response.data['accessToken'],
+          refreshToken: response.data['refreshToken']);
+      accessToken = response.data['accessToken'];
+      return response.data;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw ApiError(_getErrorMessage(result));
+        throw e;
       }
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
   }
 
@@ -67,116 +141,119 @@ class Api {
     @required String password,
   }) async {
     try {
-      final response = await http.post(
-        "$_baseUrl/auth/register",
-        headers: instance._headers,
-        body: jsonEncode({
+      final response = await _dio.post(
+        "/auth/register",
+        data: {
           'firstName': firstName,
           'lastName': lastName,
           'email': email,
           'password': password,
-        }),
+        },
       );
-      var result = await compute(jsonDecode, response.body);
-      if (response.statusCode == 200) {
-        return result;
+      await _storeTokens(
+          accessToken: response.data['accessToken'],
+          refreshToken: response.data['refreshToken']);
+      accessToken = response.data['accessToken'];
+      return response.data;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+        throw e;
       }
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
   }
 
   Future<bool> resetPassword(String email) async {
     try {
-      final response = await http.post(
-        "$_baseUrl/auth/forgot-password",
-        headers: instance._headers,
-        body: jsonEncode({'email': email}),
+      await _dio.post(
+        "/auth/forgot-password",
+        data: {'email': email},
       );
-      if (response.statusCode == 201) {
-        return true;
+      return true;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
       }
-      throw ApiError(_getErrorMessage(jsonDecode(response.body)));
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
-  }
-
-  String _getErrorMessage(dynamic result) {
-    return (result['errors'] as List).map((error) => error['msg']).join(', ');
   }
 
   Future<List<Group>> fetchGroups() async {
     // TODO: Handle pagination
     try {
-      final response = await http.get(
-        "$_baseUrl/groups",
-        headers: instance._headers,
-      );
-      if (response.statusCode == 200) {
-        return compute(Group.parseGroups, response.body);
+      final response = await _dio.get("/groups");
+      return Group.parseGroups(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
       }
-      throw ApiError(_getErrorMessage(jsonDecode(response.body)));
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
   }
 
   Future<Group> createGroup({String name, String currency}) async {
     try {
-      final response = await http.post(
-        "$_baseUrl/groups",
-        headers: instance._headers,
-        body: jsonEncode({
+      final response = await _dio.post(
+        "/groups",
+        data: {
           'name': name,
           'currency': currency,
-        }),
+        },
       );
-      if (response.statusCode == 201) {
-        return compute(Group.parseGroup, response.body);
+      return Group.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+        throw e;
       }
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
   }
 
   Future<Group> updateGroup({String groupId, name, currency}) async {
     try {
-      final response = await http.patch(
-        "$_baseUrl/groups/$groupId",
-        headers: instance._headers,
-        body: jsonEncode({
+      final response = await _dio.patch(
+        "/groups/$groupId",
+        data: {
           'name': name,
           'currency': currency,
-        }),
+        },
       );
-      if (response.statusCode == 200) {
-        return compute(Group.parseGroup, response.body);
+      return Group.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+        throw e;
       }
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
   }
 
   Future<bool> deleteGroup(String groupId) async {
     try {
-      final response = await http.delete(
-        "$_baseUrl/groups/$groupId",
-        headers: instance._headers,
+      await _dio.delete(
+        "/groups/$groupId",
       );
-      if (response.statusCode == 204) {
-        return true;
+      return true;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw ApiError(_getErrorMessage(jsonDecode(response.body)));
+        throw e;
       }
-    } on http.ClientException {
-      throw ApiError('Connection failed');
     }
+  }
+
+  Future<void> _storeTokens(
+      {@required String accessToken, @required String refreshToken}) async {
+    await _storage.write(key: ACCESS_TOKEN_KEY, value: accessToken);
+    await _storage.write(key: REFRESH_TOKEN_KEY, value: refreshToken);
+  }
+
+  String _getErrorMessage(dynamic result) {
+    return (result['errors'] as List).map((error) => error['msg']).join(', ');
   }
 }

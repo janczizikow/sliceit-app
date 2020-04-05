@@ -63,5 +63,6 @@ class GroupsProvider with ChangeNotifier {
   void reset() {
     _groups = [];
     _lastFetchedTimestamp = null;
+    notifyListeners();
   }
 }

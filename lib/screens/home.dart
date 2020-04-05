@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:sliceit/models/group.dart';
 
 import './group.dart';
-import './settings.dart';
 import '../providers/theme.dart';
 import '../providers/groups.dart';
 import '../widgets/platform_appbar.dart';
 import '../widgets/platform_scaffold.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/balance_list.dart';
 import '../widgets/expenses_list.dart';
 import '../widgets/speed_dial_label.dart';
@@ -20,8 +21,6 @@ enum MoreMenuOptions {
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final groups = Provider.of<GroupsProvider>(context).groups;
-    final selectedGroup = Provider.of<GroupsProvider>(context).selectedGroup;
     // TODO: Create no splash tab bar component
     // https://stackoverflow.com/questions/50020523/how-to-disable-default-widget-splash-effect-in-flutter/58673392#58673392
     return Theme(
@@ -33,38 +32,45 @@ class HomeScreen extends StatelessWidget {
         length: 2,
         child: PlatformScaffold(
           appBar: PlatformAppBar(
-            title: Text(selectedGroup.name),
+            title: Selector<GroupsProvider, Group>(
+              selector: (_, groups) => groups.selectedGroup,
+              builder: (_, selectedGroup, __) => Text(selectedGroup.name),
+            ),
             elevation: 0,
             androidCenterTitle: true,
             actions: [
-              PopupMenuButton<MoreMenuOptions>(
-                tooltip: 'More',
-                onSelected: (MoreMenuOptions result) {
-                  switch (result) {
-                    case MoreMenuOptions.settings:
-                      Navigator.of(context)
-                          .pushNamed(GroupScreen.routeName, arguments: {
-                        'groupId': selectedGroup.id,
-                        'name': selectedGroup.name,
-                        'currency': selectedGroup.currency,
-                      });
-                      break;
-                    default:
-                      return null;
-                  }
-                },
-                itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<MoreMenuOptions>>[
-                  const PopupMenuItem<MoreMenuOptions>(
-                    value: MoreMenuOptions.settings,
-                    child: Text('Group settings'),
-                  ),
-                  const PopupMenuItem<MoreMenuOptions>(
-                    value: MoreMenuOptions.export,
-                    enabled: false,
-                    child: Text('Export as spreadsheet'),
-                  ),
-                ],
+              Selector<GroupsProvider, Group>(
+                selector: (_, groups) => groups.selectedGroup,
+                builder: (_, selectedGroup, __) =>
+                    PopupMenuButton<MoreMenuOptions>(
+                  tooltip: 'More',
+                  onSelected: (MoreMenuOptions result) {
+                    switch (result) {
+                      case MoreMenuOptions.settings:
+                        Navigator.of(context)
+                            .pushNamed(GroupScreen.routeName, arguments: {
+                          'groupId': selectedGroup.id,
+                          'name': selectedGroup.name,
+                          'currency': selectedGroup.currency,
+                        });
+                        break;
+                      default:
+                        return null;
+                    }
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<MoreMenuOptions>>[
+                    const PopupMenuItem<MoreMenuOptions>(
+                      value: MoreMenuOptions.settings,
+                      child: Text('Group settings'),
+                    ),
+                    const PopupMenuItem<MoreMenuOptions>(
+                      value: MoreMenuOptions.export,
+                      enabled: false,
+                      child: Text('Export as spreadsheet'),
+                    ),
+                  ],
+                ),
               ),
             ],
             androidBottom: TabBar(
@@ -97,67 +103,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          drawer: Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                Consumer<ThemeProvider>(
-                  builder: (_, theme, __) => UserAccountsDrawerHeader(
-                    otherAccountsPictures: <Widget>[
-                      IconButton(
-                        icon: Icon(
-                          theme.isLight
-                              ? Icons.brightness_4
-                              : Icons.brightness_5,
-                          color: Colors.white,
-                        ),
-                        onPressed: theme.toggleTheme,
-                      )
-                    ],
-                    accountName: Text('Group'),
-                    accountEmail: Text(selectedGroup.name),
-                    // TODO: Group selection
-                    onDetailsPressed: groups.length > 1 ? () {} : null,
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.group),
-                  title: Text('New Group'),
-                  onTap: () {
-                    Navigator.of(context)
-                        .popAndPushNamed(GroupScreen.routeName);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings),
-                  title: Text('Settings'),
-                  onTap: () {
-                    Navigator.of(context)
-                        .popAndPushNamed(SettingsScreen.routeName);
-                  },
-                ),
-                Divider(),
-                ListTile(
-                  title: Text('App information'),
-                ),
-                ListTile(
-                  onTap: () => {},
-                  leading: Icon(Icons.comment),
-                  title: Text('Rate Sliceit'),
-                ),
-                ListTile(
-                  onTap: () => {},
-                  leading: Icon(Icons.help),
-                  title: Text('Support'),
-                ),
-                ListTile(
-                  onTap: () => {},
-                  leading: Icon(Icons.info),
-                  title: Text('Acknowledgements'),
-                ),
-              ],
-            ),
-          ),
+          drawer: AppDrawer(),
           body: TabBarView(
             children: <Widget>[
               BalanceList(),

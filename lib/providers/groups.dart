@@ -23,6 +23,14 @@ class GroupsProvider with ChangeNotifier {
         : null;
   }
 
+  selectGroup(String id) {
+    int groupIndex = _groups.indexWhere((group) => group.id == id);
+    if (groupIndex != -1) {
+      _selectedGroupIndex = groupIndex;
+      notifyListeners();
+    }
+  }
+
   Group byId(String id) {
     return _groups.firstWhere((group) => group.id == id);
   }
@@ -37,6 +45,7 @@ class GroupsProvider with ChangeNotifier {
   Future<void> createGroup({String name, String currency}) async {
     final Group group = await _api.createGroup(name: name, currency: currency);
     _groups.add(group);
+    _selectedGroupIndex = _groups.length - 1;
     notifyListeners();
   }
 

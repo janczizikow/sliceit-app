@@ -29,9 +29,9 @@ class Group {
     );
   }
 
-  static List<Group> parseGroups(Map<String, dynamic> json) {
+  static List<Group> parseGroups(List<dynamic> json) {
     final List<Group> result =
-        json['groups'].map<Group>((json) => Group.fromJson(json)).toList();
+        json.map<Group>((json) => Group.fromJson(json)).toList();
     return result;
   }
 

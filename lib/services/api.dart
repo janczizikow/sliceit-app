@@ -94,12 +94,11 @@ class Api {
                 return _dio.request(options.path, options: options);
               } on DioError catch (err) {
                 switch (err.type) {
-                  case DioErrorType.CONNECT_TIMEOUT:
-                  case DioErrorType.RECEIVE_TIMEOUT:
-                    return null;
-                  default:
+                  case DioErrorType.RESPONSE:
                     // TODO: FORCELOGOUT
                     return err;
+                  default:
+                    return null;
                 }
               } catch (err) {
                 // TODO: FORCELOGOUT
@@ -180,11 +179,20 @@ class Api {
     }
   }
 
-  Future<List<Group>> fetchGroups() async {
-    // TODO: Handle pagination
+  Future<List<Group>> fetchGroups(
+      {int page = 1, List<dynamic> results = const []}) async {
     try {
-      final response = await _dio.get("/groups");
-      return Group.parseGroups(response.data);
+      int limit = 50;
+      int offset = page * limit;
+      Response<Map<String, dynamic>> response =
+          await _dio.get("/groups?page=$page&limit=$limit&offset=$offset");
+      int nextPage = response.data['next'] != null ? page + 1 : null;
+      List<dynamic> data = results + response.data['groups'];
+      if (nextPage != null) {
+        return fetchGroups(page: nextPage, results: data);
+      } else {
+        return Group.parseGroups(data);
+      }
     } on DioError catch (e) {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));

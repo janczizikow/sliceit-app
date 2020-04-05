@@ -36,6 +36,12 @@ class _GroupState extends State<GroupScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
   void _showErrorMessage(String message) async {
     showPlatformDialog(
       context: context,

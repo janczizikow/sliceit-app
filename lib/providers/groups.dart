@@ -18,7 +18,9 @@ class GroupsProvider with ChangeNotifier {
   }
 
   Group get selectedGroup {
-    return _groups[_selectedGroupIndex];
+    return _selectedGroupIndex < _groups.length
+        ? _groups[_selectedGroupIndex]
+        : null;
   }
 
   Group byId(String id) {

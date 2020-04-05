@@ -31,7 +31,13 @@ class _GroupState extends State<GroupScreen> {
     super.initState();
     if (widget.arguments?.containsKey('groupId') ?? false) {
       _groupId = widget.arguments['groupId'];
-      _nameController.text = widget.arguments['name'];
+      _nameController.value = _nameController.value.copyWith(
+        text: widget.arguments['name'],
+        selection: TextSelection(
+            baseOffset: widget.arguments['name'].length,
+            extentOffset: widget.arguments['name'].length),
+        composing: TextRange.empty,
+      );
       _currency = widget.arguments['currency'];
     }
   }

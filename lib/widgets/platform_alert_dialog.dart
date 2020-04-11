@@ -27,34 +27,36 @@ Future<T> showPlatformDialog<T>({
 
 class PlatformAlertDialog
     extends PlatformBase<CupertinoAlertDialog, AlertDialog> {
-  final String title;
-  final String message;
+  final Widget title;
+  final Widget content;
   final String cancelText;
   final String confirmText;
+  final bool noActions;
 
   PlatformAlertDialog({
     Key key,
-    @required this.title,
-    @required this.message,
+    this.title,
+    this.content,
     this.cancelText,
     this.confirmText = 'OK',
+    this.noActions = false,
   }) : super(key: key);
 
   @override
   CupertinoAlertDialog buildCupertinoWidget(BuildContext context) {
     return CupertinoAlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: _actions(context),
+      title: title,
+      content: content,
+      actions: noActions ? null : _actions(context),
     );
   }
 
   @override
   AlertDialog buildMaterialWidget(BuildContext context) {
     return AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: _actions(context),
+      title: title,
+      content: content,
+      actions: noActions ? null : _actions(context),
     );
   }
 

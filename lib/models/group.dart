@@ -25,7 +25,8 @@ class Group {
       currency: json['currency'],
       isDeleted: json['isDeleted'],
       createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 

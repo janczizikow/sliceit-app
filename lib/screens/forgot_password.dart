@@ -23,8 +23,8 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: title,
-        message: message,
+        title: Text(title),
+        content: Text(message),
       ),
     );
   }
@@ -49,10 +49,11 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
         title: 'Error',
         message: 'Failed to sent email, please try again.',
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override

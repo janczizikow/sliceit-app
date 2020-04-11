@@ -4,6 +4,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:sliceit/models/group.dart';
 
 import './group.dart';
+import '../providers/account.dart';
 import '../providers/groups.dart';
 import '../widgets/platform_appbar.dart';
 import '../widgets/platform_scaffold.dart';
@@ -19,7 +20,18 @@ enum MoreMenuOptions {
   export,
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    Provider.of<AccountProvider>(context, listen: false).fetchAccount();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

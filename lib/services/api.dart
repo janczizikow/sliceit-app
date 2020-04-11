@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/group.dart';
+import '../models/account.dart';
 import '../utils/constants.dart';
 
 class ApiError extends Error {
@@ -52,7 +55,10 @@ class Api {
           return response;
         },
         onError: (DioError e) async {
-          if (e.response?.statusCode == 401) {
+          RegExp regExp = new RegExp(r'(login|register|google)');
+          if (e.response?.statusCode == 401 && e.response?.request?.path != null
+              ? !regExp.hasMatch(e.response.request.path)
+              : false) {
             RequestOptions options = e.response.request;
             String authorizationHeader = "Bearer $accessToken";
 
@@ -154,6 +160,77 @@ class Api {
           refreshToken: response.data['refreshToken']);
       accessToken = response.data['accessToken'];
       return response.data;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<Account> fetchAccount() async {
+    try {
+      final response = await _dio.get('/auth/me');
+      return Account.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<Account> updateAccount({
+    @required String email,
+    @required String firstName,
+    @required String lastName,
+  }) async {
+    try {
+      final response = await _dio.put('/users/account', data: {
+        'email': email,
+        'firstName': firstName,
+        'lastName': lastName,
+      });
+      return Account.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> uploadAvatar(String path) async {
+    FormData formData = FormData.fromMap({
+      'avatar': await MultipartFile.fromFile(
+        path,
+        contentType: MediaType.parse(lookupMimeType(path) ?? 'image/jpg'),
+      ),
+    });
+    final response = await _dio.post('/users/account/avatar', data: formData);
+    return response.data;
+  }
+
+  Future<bool> removeAvatar() async {
+    try {
+      await _dio.delete('/users/account/avatar');
+      return true;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<bool> deleteAccount() async {
+    try {
+      await _dio.delete('/users');
+      return true;
     } on DioError catch (e) {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));

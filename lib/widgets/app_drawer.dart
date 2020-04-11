@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:app_review/app_review.dart';
 
 import '../providers/theme.dart';
 import '../providers/groups.dart';
@@ -20,6 +21,10 @@ class _AppDrawerState extends State<AppDrawer> {
     });
   }
 
+  Future<void> _requestReview() async {
+    await AppReview.requestReview;
+  }
+
   List<Widget> _renderItems() {
     return [
       ListTile(
@@ -32,25 +37,11 @@ class _AppDrawerState extends State<AppDrawer> {
         title: Text('Settings'),
         onTap: _openSettings,
       ),
-      Divider(),
       ListTile(
-        title: Text('App information'),
-      ),
-      ListTile(
-        onTap: () => {},
+        onTap: _requestReview,
         leading: Icon(Icons.comment),
         title: Text('Rate Sliceit'),
       ),
-      ListTile(
-        onTap: () => {},
-        leading: Icon(Icons.help),
-        title: Text('Support'),
-      ),
-      ListTile(
-        onTap: () => {},
-        leading: Icon(Icons.info),
-        title: Text('Acknowledgements'),
-      )
     ].toList();
   }
 

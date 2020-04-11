@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry/sentry.dart';
 
 import './providers/auth.dart';
+import './providers/account.dart';
 import './providers/theme.dart';
 import './providers/groups.dart';
 import './screens/root.dart';
@@ -16,6 +17,8 @@ import './screens/forgot_password.dart';
 import './screens/register.dart';
 import './screens/group.dart';
 import './screens/settings.dart';
+import './screens/edit_name.dart';
+import './screens/edit_email.dart';
 
 Future<Null> main() async {
   await DotEnv().load('.env');
@@ -77,12 +80,17 @@ class _MyAppState extends State<MyApp> {
       GroupScreen.routeName: (context) =>
           GroupScreen(arguments: ModalRoute.of(context).settings.arguments),
       SettingsScreen.routeName: (context) => SettingsScreen(),
+      EditNameScreen.routeName: (context) => EditNameScreen(),
+      EditEmailScreen.routeName: (context) => EditEmailScreen(),
     };
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) => Auth(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AccountProvider(),
         ),
         ChangeNotifierProvider(
           create: (_) => themeProvider,

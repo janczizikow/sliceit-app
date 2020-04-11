@@ -52,8 +52,8 @@ class _GroupState extends State<GroupScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: 'Error',
-        message: message,
+        title: Text('Error'),
+        content: Text(message),
       ),
     );
   }

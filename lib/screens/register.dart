@@ -36,8 +36,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: 'Error',
-        message: message,
+        title: Text('Error'),
+        content: Text(message),
       ),
     );
   }

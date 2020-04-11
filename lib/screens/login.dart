@@ -35,8 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: 'Error',
-        message: message,
+        title: Text('Error'),
+        content: Text(message),
       ),
     );
   }
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
-                  labelText: 'email',
+                  labelText: 'Email',
                 ),
                 onSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_passwordFocusNode);
@@ -100,9 +100,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 textInputAction: TextInputAction.go,
                 decoration: InputDecoration(
-                  labelText: 'password',
+                  labelText: 'Password',
                 ),
                 focusNode: _passwordFocusNode,
+                onSubmitted: (_) {
+                  FocusScopeNode currentFocus = FocusScope.of(context);
+                  if (!currentFocus.hasPrimaryFocus) {
+                    currentFocus.unfocus();
+                  }
+                  _authenticate();
+                },
               ),
               SizedBox(
                 height: 16,

@@ -8,10 +8,11 @@ class Auth with ChangeNotifier {
   final _storage = FlutterSecureStorage();
   final Api _api = Api();
   String _accessToken;
+  bool _isFetching = false;
 
-  get isAuthenticated {
-    return _accessToken != null;
-  }
+  get isAuthenticated => _accessToken != null;
+
+  get isFetching => _isFetching;
 
   Future<void> restoreTokens() async {
     String accessToken = await _storage.read(key: ACCESS_TOKEN_KEY);
@@ -24,10 +25,15 @@ class Auth with ChangeNotifier {
 
   Future<void> login({String email, String password}) async {
     try {
+      _isFetching = true;
+      notifyListeners();
       final res = await _api.login(email, password);
+      _isFetching = false;
       _accessToken = res['accessToken'];
       notifyListeners();
     } catch (err) {
+      _isFetching = false;
+      notifyListeners();
       throw err;
     }
   }
@@ -39,15 +45,20 @@ class Auth with ChangeNotifier {
     @required String password,
   }) async {
     try {
+      _isFetching = true;
+      notifyListeners();
       final res = await _api.register(
         firstName: firstName,
         lastName: lastName,
         email: email,
         password: password,
       );
+      _isFetching = false;
       _accessToken = res['accessToken'];
       notifyListeners();
     } catch (err) {
+      _isFetching = false;
+      notifyListeners();
       throw err;
     }
   }

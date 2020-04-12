@@ -18,7 +18,7 @@ class EditNameScreen extends StatefulWidget {
 class _EditNameState extends State<EditNameScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _lastNameFocusNode = FocusNode();
+  FocusNode _lastNameFocusNode;
 
   var _isLoading = false;
 
@@ -45,12 +45,14 @@ class _EditNameState extends State<EditNameScreen> {
       ),
       composing: TextRange.empty,
     );
+    _lastNameFocusNode = FocusNode();
   }
 
   @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _lastNameFocusNode.dispose();
     super.dispose();
   }
 

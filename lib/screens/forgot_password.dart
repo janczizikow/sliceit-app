@@ -19,7 +19,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   var _isLoading = false;
 
-  void _showDialog({String title, String message}) async {
+  Future<void> _showDialog({String title, String message}) async {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
@@ -30,10 +30,9 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
   }
 
   void _resetPassword() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     final email = _emailController.text;
+
     try {
       await _api.resetPassword(email);
       _emailController.clear();
@@ -50,9 +49,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
         message: 'Failed to sent email, please try again.',
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -75,6 +72,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
                 height: 16,
               ),
               PlatformTextField(
+                autofocus: true,
                 autocorrect: false,
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,

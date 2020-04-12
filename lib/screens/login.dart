@@ -19,13 +19,20 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _passwordFocusNode = FocusNode();
+  FocusNode _passwordFocusNode;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  var _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _passwordFocusNode = FocusNode();
+  }
 
   @override
   void dispose() {
+    _passwordFocusNode.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -45,10 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).pushNamed(ForgotPasswordScreen.routeName);
   }
 
+  void _handleSubmit() {
+    FocusScopeNode currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+    _authenticate();
+  }
+
   Future<void> _authenticate() async {
-    setState(() {
-      _isLoading = true;
-    });
     // TODO: Validation
     String email = _emailController.text;
     String password = _passwordController.text;
@@ -58,14 +70,8 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
     } on ApiError catch (err) {
       _showErrorMessage(err.message);
-      setState(() {
-        _isLoading = false;
-      });
     } catch (err) {
       _showErrorMessage('Failed to authenticate');
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -90,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Email',
                 ),
+                placeholder: 'Email',
                 onSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_passwordFocusNode);
                 },
@@ -102,23 +109,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Password',
                 ),
+                placeholder: 'Password',
                 focusNode: _passwordFocusNode,
-                onSubmitted: (_) {
-                  FocusScopeNode currentFocus = FocusScope.of(context);
-                  if (!currentFocus.hasPrimaryFocus) {
-                    currentFocus.unfocus();
-                  }
-                  _authenticate();
-                },
+                onSubmitted: (_) => _handleSubmit(),
               ),
-              SizedBox(
-                height: 16,
-              ),
-              PlatformButton(
-                color: Theme.of(context).primaryColor,
-                colorBrightness: Brightness.dark,
-                child: _isLoading ? Text('Loading...') : Text('Login'),
-                onPressed: _isLoading ? null : _authenticate,
+              SizedBox(height: 16),
+              Selector<Auth, bool>(
+                selector: (_, auth) => auth.isFetching,
+                builder: (_, isFetching, __) => PlatformButton(
+                  color: Theme.of(context).primaryColor,
+                  colorBrightness: Brightness.dark,
+                  child: isFetching ? Text('Loading...') : Text('Login'),
+                  onPressed: isFetching ? null : _authenticate,
+                ),
               ),
               PlatformButton(
                 materialStyle: MaterialButtonStyle.flat,

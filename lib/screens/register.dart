@@ -21,7 +21,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  var _isLoading = false;
+
+  FocusNode _lastNameFocusNode;
+  FocusNode _emailFocusNode;
+  FocusNode _passwordFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastNameFocusNode = FocusNode();
+    _emailFocusNode = FocusNode();
+    _passwordFocusNode = FocusNode();
+  }
 
   @override
   void dispose() {
@@ -29,6 +40,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _lastNameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -42,10 +56,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _handleSubmit() {
+    FocusScopeNode currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+    _register();
+  }
+
   void _register() async {
-    setState(() {
-      _isLoading = true;
-    });
     // TODO: Validation
     String firstName = _firstNameController.text;
     String lastName = _lastNameController.text;
@@ -61,18 +80,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
     } on ApiError catch (err) {
       _showErrorMessage(err.message);
-      setState(() {
-        _isLoading = false;
-      });
     } catch (err) {
       _showErrorMessage('Failed to register');
-      setState(() {
-        _isLoading = false;
-      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -88,45 +98,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               PlatformTextField(
+                autofocus: true,
                 controller: _firstNameController,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'First name',
                 ),
+                onSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_lastNameFocusNode),
               ),
               PlatformTextField(
                 controller: _lastNameController,
+                focusNode: _lastNameFocusNode,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Last name',
                 ),
+                onSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_emailFocusNode),
               ),
               PlatformTextField(
                 autocorrect: false,
                 controller: _emailController,
+                focusNode: _emailFocusNode,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Email',
                 ),
+                onSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_passwordFocusNode),
               ),
               PlatformTextField(
                 obscureText: true,
                 autocorrect: false,
                 controller: _passwordController,
+                focusNode: _passwordFocusNode,
                 textInputAction: TextInputAction.go,
                 decoration: InputDecoration(
                   labelText: 'Password',
                 ),
+                onSubmitted: (_) => _handleSubmit(),
               ),
               SizedBox(height: 16),
-              PlatformButton(
-                color: Theme.of(context).primaryColor,
-                colorBrightness: Brightness.dark,
-                child: _isLoading ? Text('Loading...') : Text('Register'),
-                onPressed: _isLoading ? null : _register,
+              Selector<Auth, bool>(
+                selector: (_, auth) => auth.isFetching,
+                builder: (_, isFetching, __) => PlatformButton(
+                  color: Theme.of(context).primaryColor,
+                  colorBrightness: Brightness.dark,
+                  child: isFetching ? Text('Loading...') : Text('Register'),
+                  onPressed: isFetching ? null : _register,
+                ),
               ),
             ],
           ),

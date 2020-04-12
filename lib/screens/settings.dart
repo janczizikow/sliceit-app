@@ -246,7 +246,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  _launchURL(String slug, {bool isEmail}) async {
+  _launchURL(String slug, {bool isEmail = false}) async {
     String url = isEmail ? slug : WEB_URL + slug;
     if (await canLaunch(url)) {
       await launch(url);

@@ -12,7 +12,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   final TextInputAction textInputAction;
   final TextCapitalization textCapitalization;
   final Brightness keyboardAppearance;
-
+  final String placeholder;
   final InputDecoration decoration;
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -24,6 +24,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
     this.keyboardType,
     this.textInputAction,
     this.keyboardAppearance,
+    this.placeholder,
     this.decoration,
     this.controller,
     this.focusNode,
@@ -38,6 +39,7 @@ class PlatformTextField extends PlatformBase<CupertinoTextField, TextField> {
   @override
   CupertinoTextField buildCupertinoWidget(BuildContext context) {
     return CupertinoTextField(
+      placeholder: placeholder,
       autofocus: autofocus,
       autocorrect: autocorrect,
       controller: controller,

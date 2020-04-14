@@ -72,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
 class _AndroidHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -122,7 +123,7 @@ class _AndroidHome extends StatelessWidget {
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white,
             indicator: TabBarIndicator(
-              color: Theme.of(context).primaryColorLight.withOpacity(0.3),
+              color: theme.primaryColorLight.withOpacity(0.3),
             ),
             tabs: <Widget>[
               Tab(
@@ -152,6 +153,9 @@ class _AndroidHome extends StatelessWidget {
           child: Icon(Icons.add),
           visible: true,
           curve: Curves.decelerate,
+          overlayOpacity: theme.brightness == Brightness.dark ? 0.54 : 0.8,
+          overlayColor:
+              theme.brightness == Brightness.dark ? Colors.black : Colors.white,
           children: [
             SpeedDialChild(
               child: const Icon(Icons.shopping_basket),

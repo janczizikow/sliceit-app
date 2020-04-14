@@ -1,14 +1,12 @@
-import 'package:flutter/foundation.dart';
-
+import './base.dart';
 import '../models/account.dart';
 import '../services/api.dart';
 
-enum Status { IDLE, UPLOAD, ERROR }
-
-class AccountProvider with ChangeNotifier {
+class AccountProvider extends BaseProvider {
+  final Api api;
   Account _account;
-  Status _avatarStatus = Status.IDLE;
-  final Api _api = Api();
+
+  AccountProvider(this.api);
 
   Account get account => _account;
 
@@ -18,17 +16,15 @@ class AccountProvider with ChangeNotifier {
 
   bool get hasAvatar => account?.avatar != null;
 
-  Status get avatarStatus => _avatarStatus;
-
   Future<void> fetchAccount() async {
-    Account account = await _api.fetchAccount();
+    Account account = await api.fetchAccount();
     _account = account;
     notifyListeners();
   }
 
   Future<void> updateAccount(
       {String email, String firstName, String lastName}) async {
-    Account account = await _api.updateAccount(
+    Account account = await api.updateAccount(
       email: email ?? _account.email,
       firstName: firstName ?? _account.firstName,
       lastName: lastName ?? _account.lastName,
@@ -38,32 +34,29 @@ class AccountProvider with ChangeNotifier {
   }
 
   Future<void> uploadAvatar(String path) async {
-    _avatarStatus = Status.UPLOAD;
-    notifyListeners();
+    status = Status.PENDING;
 
     try {
-      final response = await _api.uploadAvatar(path);
+      final response = await api.uploadAvatar(path);
       if (response['status']) {
         _account.avatar = response['data']['url'];
-        _avatarStatus = Status.IDLE;
+        status = Status.RESOLVED;
       } else {
-        _avatarStatus = Status.ERROR;
+        status = Status.REJECTED;
       }
     } catch (e) {
-      _avatarStatus = Status.ERROR;
-    } finally {
-      notifyListeners();
+      status = Status.REJECTED;
     }
   }
 
   Future<void> removeAvatar() async {
-    await _api.removeAvatar();
+    await api.removeAvatar();
     _account.avatar = null;
     notifyListeners();
   }
 
   Future<void> deleteAccount() async {
-    await _api.deleteAccount();
+    await api.deleteAccount();
     _account = null;
     notifyListeners();
   }

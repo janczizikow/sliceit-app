@@ -1,17 +1,30 @@
 import 'package:flutter/foundation.dart';
-
-import '../models/group.dart';
+import './base.dart';
 import '../services/api.dart';
+import '../models/group.dart';
 
-class GroupsProvider with ChangeNotifier {
-  final Api _api = Api();
-  List<Group> _groups = [];
+class GroupsProvider extends BaseProvider {
+  final Api api;
+  final List<Group> _groups = [];
   int _selectedGroupIndex = 0;
   int _lastFetchedTimestamp;
+
+  GroupsProvider({
+    @required this.api,
+    @required bool isAuthenticated,
+    List<Group> prev = const [],
+  }) {
+    if (isAuthenticated) {
+      fetchGroups();
+    }
+    _groups.addAll(prev);
+  }
 
   List<Group> get groups {
     return _groups;
   }
+
+  bool get hasGroups => groups.isNotEmpty;
 
   bool get needsSync {
     return _lastFetchedTimestamp == null;
@@ -36,14 +49,21 @@ class GroupsProvider with ChangeNotifier {
   }
 
   Future<void> fetchGroups() async {
-    final List<Group> groups = await _api.fetchGroups();
-    _groups = groups;
-    _lastFetchedTimestamp = DateTime.now().millisecondsSinceEpoch;
-    notifyListeners();
+    status = Status.PENDING;
+
+    try {
+      final List<Group> groups = await api.fetchGroups();
+      _groups.addAll(groups);
+      _lastFetchedTimestamp = DateTime.now().millisecondsSinceEpoch;
+      status = Status.RESOLVED;
+    } catch (e) {
+      status = Status.REJECTED;
+      throw e;
+    }
   }
 
   Future<void> createGroup({String name, String currency}) async {
-    final Group group = await _api.createGroup(name: name, currency: currency);
+    final Group group = await api.createGroup(name: name, currency: currency);
     _groups.add(group);
     _selectedGroupIndex = _groups.length - 1;
     notifyListeners();
@@ -53,7 +73,7 @@ class GroupsProvider with ChangeNotifier {
       {String groupId, String name, String currency}) async {
     final groupIndex = _groups.indexWhere((group) => group.id == groupId);
     if (groupIndex != -1) {
-      final Group updatedGroup = await _api.updateGroup(
+      final Group updatedGroup = await api.updateGroup(
         groupId: groupId,
         name: name,
         currency: currency,
@@ -64,14 +84,15 @@ class GroupsProvider with ChangeNotifier {
   }
 
   Future<void> deleteGroup(String groupId) async {
-    await _api.deleteGroup(groupId);
+    await api.deleteGroup(groupId);
     _groups.removeWhere((group) => group.id == groupId);
     notifyListeners();
   }
 
   void reset() {
-    _groups = [];
+    _groups.clear();
+    _selectedGroupIndex = 0;
     _lastFetchedTimestamp = null;
-    notifyListeners();
+    status = Status.IDLE;
   }
 }

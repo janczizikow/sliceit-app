@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/screens/offline.dart';
 import 'package:tuple/tuple.dart';
 
 import './home.dart';
 import './loading.dart';
 import './welcome.dart';
 import './group.dart';
+import '../providers/base.dart';
 import '../providers/auth.dart';
 import '../providers/groups.dart';
 
 class Root extends StatefulWidget {
+  const Root({
+    Key key,
+  }) : super(key: key);
+
+  static const routeName = '/';
+
   @override
   _RootState createState() => _RootState();
 }
 
 class _RootState extends State<Root> {
   Future<void> _restoreTokens;
-  Future<void> _fetchGroups;
 
   @override
   void initState() {
@@ -25,35 +32,16 @@ class _RootState extends State<Root> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final isAuthenticated = Provider.of<Auth>(context).isAuthenticated;
-    if (isAuthenticated && _fetchGroups == null) {
-      _fetchGroups =
-          Provider.of<GroupsProvider>(context, listen: false).fetchGroups();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Selector<Auth, bool>(
-      selector: (_, auth) => auth.isAuthenticated,
-      builder: (_, isAuthenticated, __) => isAuthenticated
-          ? Selector<GroupsProvider, Tuple2<bool, bool>>(
-              selector: (_, groups) =>
-                  Tuple2(groups.needsSync, groups.groups.isEmpty),
-              builder: (_, data, __) => data.item1
-                  ? FutureBuilder(
-                      // FIXME: Gets triggered multiple times on registration / newGroup creation
-                      future: _fetchGroups,
-                      builder: (_, snapshot) {
-                        return snapshot.connectionState ==
-                                ConnectionState.waiting
-                            ? LoadingScreen()
-                            : data.item2 ? GroupScreen() : HomeScreen();
-                      })
-                  : data.item2 ? GroupScreen() : HomeScreen(),
-            )
+    return Selector2<Auth, GroupsProvider, Tuple3<bool, Status, bool>>(
+      selector: (_, auth, groups) =>
+          Tuple3(auth.isAuthenticated, groups.status, groups.hasGroups),
+      builder: (_, data, __) => data.item1
+          ? data.item2 == Status.REJECTED
+              ? OfflineScreen()
+              : data.item2 == Status.PENDING
+                  ? LoadingScreen()
+                  : data.item3 ? HomeScreen() : GroupScreen()
           : FutureBuilder(
               future: _restoreTokens,
               builder: (_, snapshot) =>

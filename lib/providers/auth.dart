@@ -1,39 +1,39 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sliceit/providers/base.dart';
 
+import './base.dart';
 import '../services/api.dart';
 import '../utils/constants.dart';
 
-class Auth with ChangeNotifier {
+class Auth extends BaseProvider {
   final _storage = FlutterSecureStorage();
-  final Api _api = Api();
+  final Api api;
   String _accessToken;
-  bool _isFetching = false;
+
+  Auth(this.api);
 
   get isAuthenticated => _accessToken != null;
-
-  get isFetching => _isFetching;
+  get isFetching => status == Status.PENDING;
 
   Future<void> restoreTokens() async {
     String accessToken = await _storage.read(key: ACCESS_TOKEN_KEY);
     if (accessToken != _accessToken) {
-      _api.accessToken = accessToken;
+      api.accessToken = accessToken;
       _accessToken = accessToken;
       notifyListeners();
     }
   }
 
   Future<void> login({String email, String password}) async {
+    status = Status.PENDING;
+
     try {
-      _isFetching = true;
-      notifyListeners();
-      final res = await _api.login(email, password);
-      _isFetching = false;
+      final res = await api.login(email, password);
       _accessToken = res['accessToken'];
-      notifyListeners();
+      status = Status.RESOLVED;
     } catch (err) {
-      _isFetching = false;
-      notifyListeners();
+      status = Status.REJECTED;
       throw err;
     }
   }
@@ -44,21 +44,19 @@ class Auth with ChangeNotifier {
     @required String email,
     @required String password,
   }) async {
+    status = Status.PENDING;
+
     try {
-      _isFetching = true;
-      notifyListeners();
-      final res = await _api.register(
+      final res = await api.register(
         firstName: firstName,
         lastName: lastName,
         email: email,
         password: password,
       );
-      _isFetching = false;
       _accessToken = res['accessToken'];
-      notifyListeners();
+      status = Status.RESOLVED;
     } catch (err) {
-      _isFetching = false;
-      notifyListeners();
+      status = Status.REJECTED;
       throw err;
     }
   }
@@ -66,7 +64,7 @@ class Auth with ChangeNotifier {
   Future<void> logout() async {
     await _storage.deleteAll();
     _accessToken = null;
-    _api.accessToken = null;
-    notifyListeners();
+    api.accessToken = null;
+    status = Status.IDLE;
   }
 }

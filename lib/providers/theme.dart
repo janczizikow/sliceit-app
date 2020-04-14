@@ -12,7 +12,6 @@ class ThemeProvider with ChangeNotifier {
   static final ThemeData _lightTheme = ThemeData.light();
   ThemeType _themeType = ThemeType.light;
   ThemeData currentTheme = _lightTheme;
-  ThemeProvider();
 
   bool get isDark {
     return _themeType == ThemeType.dark;

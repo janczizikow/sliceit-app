@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry/sentry.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
+import './services/api.dart';
 import './providers/auth.dart';
 import './providers/account.dart';
 import './providers/theme.dart';
@@ -60,6 +61,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final Api _api = Api();
   ThemeProvider themeProvider = ThemeProvider();
 
   @override
@@ -137,15 +139,22 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => Auth(),
+          create: (_) => Auth(_api),
         ),
         ChangeNotifierProvider(
-          create: (_) => AccountProvider(),
+          create: (_) => AccountProvider(_api),
         ),
         ChangeNotifierProvider(
           create: (_) => themeProvider,
         ),
-        ChangeNotifierProvider(create: (_) => GroupsProvider())
+        ChangeNotifierProxyProvider<Auth, GroupsProvider>(
+          create: (_) => GroupsProvider(api: _api, isAuthenticated: false),
+          update: (_, auth, previous) => GroupsProvider(
+            api: _api,
+            isAuthenticated: auth.isAuthenticated,
+            prev: previous.groups,
+          ),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, theme, __) => PlatformApp(

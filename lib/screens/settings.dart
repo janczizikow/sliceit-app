@@ -357,7 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Tuple5<Status, String, String, String,
                                 Future<void> Function(String)>>(
                         selector: (_, state) => Tuple5(
-                              state.avatarStatus,
+                              state.status,
                               state.account?.fullName ?? '',
                               state.account?.initials ?? '',
                               state.account?.avatar ?? '',
@@ -366,8 +366,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         builder: (_, data, __) {
                           return Row(
                             children: <Widget>[
-                              if (data.item1 != Status.IDLE)
-                                if (data.item1 == Status.ERROR)
+                              if (data.item1 != Status.IDLE &&
+                                  data.item1 != Status.RESOLVED)
+                                if (data.item1 == Status.REJECTED)
                                   GestureDetector(
                                     onTap: () => data.item5(_image?.path),
                                     child: CircleAvatar(

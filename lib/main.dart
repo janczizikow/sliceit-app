@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry/sentry.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './providers/auth.dart';
 import './providers/account.dart';
@@ -19,6 +20,7 @@ import './screens/group.dart';
 import './screens/settings.dart';
 import './screens/edit_name.dart';
 import './screens/edit_email.dart';
+import './widgets/no_animation_material_page_route.dart';
 
 Future<Null> main() async {
   await DotEnv().load('.env');
@@ -71,19 +73,67 @@ class _MyAppState extends State<MyApp> {
     themeProvider.themeType = preferredTheme;
   }
 
+  Route _generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case Root.routeName:
+        return Theme.of(context).platform == TargetPlatform.iOS
+            ? CupertinoPageRoute(
+                builder: (context) => new Root(),
+                settings: settings.copyWith(isInitialRoute: true),
+              )
+            : NoAnimationMaterialPageRoute(
+                builder: (context) => new Root(),
+                settings: settings.copyWith(isInitialRoute: true),
+              );
+      case RegisterScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => RegisterScreen(),
+          settings: settings,
+        );
+      case LoginScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => LoginScreen(),
+          settings: settings,
+        );
+      case ForgotPasswordScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => ForgotPasswordScreen(),
+          settings: settings,
+        );
+      case GroupScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => GroupScreen(arguments: settings.arguments),
+          settings: settings,
+        );
+      case SettingsScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => SettingsScreen(),
+          settings: settings,
+        );
+      case EditNameScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => EditNameScreen(),
+          settings: settings,
+        );
+      case EditEmailScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => EditEmailScreen(),
+          settings: settings,
+        );
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final routes = {
-      LoginScreen.routeName: (context) => LoginScreen(),
-      ForgotPasswordScreen.routeName: (context) => ForgotPasswordScreen(),
-      RegisterScreen.routeName: (context) => RegisterScreen(),
-      GroupScreen.routeName: (context) =>
-          GroupScreen(arguments: ModalRoute.of(context).settings.arguments),
-      SettingsScreen.routeName: (context) => SettingsScreen(),
-      EditNameScreen.routeName: (context) => EditNameScreen(),
-      EditEmailScreen.routeName: (context) => EditEmailScreen(),
-    };
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -97,20 +147,16 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider(create: (_) => GroupsProvider())
       ],
-      child: Theme.of(context).platform == TargetPlatform.iOS
-          ? CupertinoApp(
-              title: 'Sliceit',
-              home: Root(),
-              routes: routes,
-            )
-          : Consumer<ThemeProvider>(
-              builder: (_, theme, __) => MaterialApp(
-                title: 'Sliceit',
-                home: Root(),
-                routes: routes,
-                theme: theme.currentTheme,
-              ),
-            ),
+      child: Consumer<ThemeProvider>(
+        builder: (_, theme, __) => PlatformApp(
+          title: 'Sliceit',
+          initialRoute: Root.routeName,
+          android: (_) => MaterialAppData(
+            theme: theme.currentTheme,
+          ),
+          onGenerateRoute: _generateRoute,
+        ),
+      ),
     );
   }
 }

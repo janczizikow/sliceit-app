@@ -1,13 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:sliceit/models/group.dart';
 
 import './group.dart';
+import '../models/group.dart';
 import '../providers/account.dart';
 import '../providers/groups.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_scaffold.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/balance_list.dart';
 import '../widgets/expenses_list.dart';
@@ -21,29 +21,67 @@ enum MoreMenuOptions {
 }
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key key}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _iosTabs = [
+    BottomNavigationBarItem(
+      icon: Icon(CupertinoIcons.home),
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(CupertinoIcons.shopping_cart),
+    )
+  ];
+
   @override
   void initState() {
-    Provider.of<AccountProvider>(context, listen: false).fetchAccount();
     super.initState();
+    Provider.of<AccountProvider>(context, listen: false).fetchAccount();
+  }
+
+  Widget _buildAndroidHome(BuildContext context) {
+    return _AndroidHome();
+  }
+
+  Widget _tabContent(BuildContext context, int i) {
+    return i == 0 ? BalanceList() : ExpensesList();
   }
 
   @override
   Widget build(BuildContext context) {
+    return PlatformWidget(
+      android: _buildAndroidHome,
+      ios: (_) => PlatformTabScaffold(
+        appBarBuilder: (_, i) => PlatformAppBar(
+          title: Selector<GroupsProvider, Group>(
+            selector: (_, groups) => groups.selectedGroup,
+            builder: (_, selectedGroup, __) => Text(selectedGroup.name),
+          ),
+        ),
+        bodyBuilder: _tabContent,
+        items: _iosTabs,
+      ),
+    );
+  }
+}
+
+class _AndroidHome extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: PlatformScaffold(
-        appBar: PlatformAppBar(
+      child: Scaffold(
+        appBar: AppBar(
           title: Selector<GroupsProvider, Group>(
             selector: (_, groups) => groups.selectedGroup,
             builder: (_, selectedGroup, __) => Text(selectedGroup.name),
           ),
           elevation: 0,
-          androidCenterTitle: true,
+          centerTitle: true,
           actions: [
             Selector<GroupsProvider, Group>(
               selector: (_, groups) => groups.selectedGroup,
@@ -79,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-          androidBottom: TabBarNoRipple(
+          bottom: TabBarNoRipple(
             isScrollable: true,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white,
@@ -102,13 +140,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        drawer: AppDrawer(),
         body: TabBarView(
           children: <Widget>[
             BalanceList(),
             ExpensesList(),
           ],
         ),
+        drawer: AppDrawer(),
         floatingActionButton: SpeedDial(
           tooltip: 'Add Expense or Payment',
           child: Icon(Icons.add),

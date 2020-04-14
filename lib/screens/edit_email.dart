@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import '../services/api.dart';
 import '../providers/account.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_alert_dialog.dart';
-import '../widgets/platform_text_field.dart';
 
 class EditEmailScreen extends StatefulWidget {
   static const routeName = '/edit-email';
@@ -46,6 +44,12 @@ class _EditEmailState extends State<EditEmailScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text('Error'),
         content: Text(message),
+        actions: <Widget>[
+          PlatformDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          )
+        ],
       ),
     );
   }
@@ -75,9 +79,10 @@ class _EditEmailState extends State<EditEmailScreen> {
     return PlatformScaffold(
       appBar: PlatformAppBar(
         title: Text('Edit Email'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.check),
+        trailingActions: <Widget>[
+          PlatformIconButton(
+            iosIcon: Icon(CupertinoIcons.check_mark),
+            androidIcon: Icon(Icons.check),
             onPressed: _isLoading ? null : _editName,
           ),
         ],
@@ -91,8 +96,13 @@ class _EditEmailState extends State<EditEmailScreen> {
               PlatformTextField(
                 autofocus: true,
                 controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Email',
                 ),
                 onSubmitted: (_) {
                   FocusScopeNode currentFocus = FocusScope.of(context);

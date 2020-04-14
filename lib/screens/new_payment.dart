@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_text_field.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 class NewPaymentScreen extends StatefulWidget {
   static const routeName = '/new-payment';
@@ -18,9 +15,9 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        actions: <Widget>[
-          FlatButton(
-            child: Text('SAVE'),
+        trailingActions: <Widget>[
+          PlatformButton(
+            child: PlatformText('Save'),
             onPressed: _handleAddPayment,
           ),
         ],

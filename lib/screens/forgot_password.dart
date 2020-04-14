@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import '../services/api.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_alert_dialog.dart';
-import '../widgets/platform_text_field.dart';
-import '../widgets/platform_button.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   static const routeName = '/forgot-password';
@@ -25,6 +21,12 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text(title),
         content: Text(message),
+        actions: <Widget>[
+          PlatformDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          )
+        ],
       ),
     );
   }
@@ -77,8 +79,13 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.send,
-                decoration: InputDecoration(
-                  labelText: 'Email',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Email',
                 ),
                 onEditingComplete: _resetPassword,
               ),
@@ -87,7 +94,9 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
               ),
               PlatformButton(
                 color: Theme.of(context).primaryColor,
-                colorBrightness: Brightness.dark,
+                android: (_) => MaterialRaisedButtonData(
+                  colorBrightness: Brightness.dark,
+                ),
                 child: _isLoading ? Text('Loading...') : Text('Reset password'),
                 onPressed: _isLoading ? null : _resetPassword,
               ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:provider/provider.dart';
 
-import './platform_button.dart';
+import '../providers/auth.dart';
 
 class BalanceList extends StatelessWidget {
   final _groupMembers = [0];
@@ -21,7 +23,7 @@ class BalanceList extends StatelessWidget {
               horizontal: 16,
             ),
             child: PlatformButton(
-              materialStyle: MaterialButtonStyle.flat,
+              androidFlat: (_) => MaterialFlatButtonData(),
               child: Text('+ Invite more friends'),
               onPressed: () => {},
             ),
@@ -47,10 +49,12 @@ class BalanceList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      itemCount: _groupMembers.length + 1,
-      itemBuilder: _renderItem,
+    return SafeArea(
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        itemCount: _groupMembers.length + 1,
+        itemBuilder: _renderItem,
+      ),
     );
   }
 }

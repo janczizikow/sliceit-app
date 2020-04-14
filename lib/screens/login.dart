@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:sliceit/services/api.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './forgot_password.dart';
+import '../services/api.dart';
 import '../providers/auth.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_alert_dialog.dart';
-import '../widgets/platform_text_field.dart';
-import '../widgets/platform_button.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -44,6 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text('Error'),
         content: Text(message),
+        actions: <Widget>[
+          PlatformDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          )
+        ],
       ),
     );
   }
@@ -93,10 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Email',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                  ),
                 ),
-                placeholder: 'Email',
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Email',
+                ),
                 onSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_passwordFocusNode);
                 },
@@ -106,10 +112,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 autocorrect: false,
                 controller: _passwordController,
                 textInputAction: TextInputAction.go,
-                decoration: InputDecoration(
-                  labelText: 'Password',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                  ),
                 ),
-                placeholder: 'Password',
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Password',
+                ),
                 focusNode: _passwordFocusNode,
                 onSubmitted: (_) => _handleSubmit(),
               ),
@@ -118,13 +128,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 selector: (_, auth) => auth.isFetching,
                 builder: (_, isFetching, __) => PlatformButton(
                   color: Theme.of(context).primaryColor,
-                  colorBrightness: Brightness.dark,
+                  android: (_) => MaterialRaisedButtonData(
+                    colorBrightness: Brightness.dark,
+                  ),
                   child: isFetching ? Text('Loading...') : Text('Login'),
                   onPressed: isFetching ? null : _authenticate,
                 ),
               ),
               PlatformButton(
-                materialStyle: MaterialButtonStyle.flat,
+                androidFlat: (_) => MaterialFlatButtonData(),
                 child: Text('Forgot password?'),
                 onPressed: _forgotPassword,
               ),

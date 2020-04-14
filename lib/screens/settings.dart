@@ -7,15 +7,14 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info/package_info.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './edit_name.dart';
 import './edit_email.dart';
+import '../providers/base.dart';
 import '../providers/auth.dart';
 import '../providers/account.dart';
 import '../providers/groups.dart';
-import '../widgets/platform_alert_dialog.dart';
-import '../widgets/platform_button.dart';
-import '../widgets/platform_activity_indicator.dart';
 import '../widgets/avatar.dart';
 import '../utils/constants.dart';
 
@@ -134,6 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (_) => PlatformAlertDialog(
           title: Text('Error'),
           content: Text('Pick image error'),
+          actions: <Widget>[
+            PlatformDialogAction(
+              child: Text('OK'),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            )
+          ],
         ),
       );
     }
@@ -185,8 +190,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text('Logout'),
         content: Text('Are you sure you want to logout?'),
-        cancelText: 'Cancel',
-        confirmText: 'Logout',
+        actions: <Widget>[
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Logout'),
+          ),
+        ],
       ),
     );
     if (result) {
@@ -203,8 +216,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('Delete Account'),
         content: Text(
             'Are you sure that you want to delete your account? This will immediately log you out of your account and you will not be able to log in again.'),
-        cancelText: 'Cancel',
-        confirmText: 'Delete',
+        actions: <Widget>[
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Delete'),
+          ),
+        ],
       ),
     );
 
@@ -213,13 +234,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         androidBarrierDismissible: false,
         context: context,
         builder: (_) => PlatformAlertDialog(
-          noActions: true,
           content: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              PlatformActivityIndicator(),
+              PlatformCircularProgressIndicator(),
               SizedBox(height: 12),
               Text('Loading...'),
             ],
@@ -240,6 +260,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text('Error'),
             content: Text(
                 'Failed to delete account. Please check your Internet connection and try again'),
+            actions: <Widget>[
+              PlatformDialogAction(
+                child: Text('OK'),
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).pop(),
+              )
+            ],
           ),
         );
       }
@@ -256,6 +283,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (_) => PlatformAlertDialog(
           title: Text('Error'),
           content: Text('Could not open $url'),
+          actions: <Widget>[
+            PlatformDialogAction(
+              child: Text('OK'),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            )
+          ],
         ),
       );
     }
@@ -365,7 +398,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             fit: BoxFit.cover,
                                           ),
                                         ),
-                                        PlatformActivityIndicator(),
+                                        PlatformCircularProgressIndicator(),
                                       ],
                                     ),
                                   )
@@ -497,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 PlatformButton(
                   onPressed: _handleDeleteAccount,
-                  materialStyle: MaterialButtonStyle.flat,
+                  androidFlat: (_) => MaterialFlatButtonData(),
                   child: Text(
                     'Delete account',
                     textAlign: TextAlign.center,

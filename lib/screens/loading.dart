@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../widgets/platform_scaffold.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 class LoadingScreen extends StatelessWidget {
   @override

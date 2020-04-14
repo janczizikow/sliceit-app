@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import '../providers/auth.dart';
 import '../services/api.dart';
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_alert_dialog.dart';
-import '../widgets/platform_text_field.dart';
-import '../widgets/platform_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = '/register';
@@ -52,6 +48,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text('Error'),
         content: Text(message),
+        actions: <Widget>[
+          PlatformDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          )
+        ],
       ),
     );
   }
@@ -102,8 +104,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _firstNameController,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'First name',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'First name',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'First name',
                 ),
                 onSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(_lastNameFocusNode),
@@ -113,8 +120,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 focusNode: _lastNameFocusNode,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Last name',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Last name',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Last name',
                 ),
                 onSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(_emailFocusNode),
@@ -125,8 +137,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 focusNode: _emailFocusNode,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Email',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Email',
                 ),
                 onSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(_passwordFocusNode),
@@ -137,8 +154,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _passwordController,
                 focusNode: _passwordFocusNode,
                 textInputAction: TextInputAction.go,
-                decoration: InputDecoration(
-                  labelText: 'Password',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Password',
                 ),
                 onSubmitted: (_) => _handleSubmit(),
               ),
@@ -147,7 +169,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 selector: (_, auth) => auth.isFetching,
                 builder: (_, isFetching, __) => PlatformButton(
                   color: Theme.of(context).primaryColor,
-                  colorBrightness: Brightness.dark,
+                  android: (_) => MaterialRaisedButtonData(
+                    colorBrightness: Brightness.dark,
+                  ),
                   child: isFetching ? Text('Loading...') : Text('Register'),
                   onPressed: isFetching ? null : _register,
                 ),

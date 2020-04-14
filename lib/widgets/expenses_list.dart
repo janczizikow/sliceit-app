@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './empty_expenses.dart';
 import '../models/expense.dart';
@@ -44,12 +45,14 @@ class ExpensesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _expenses.isEmpty
-        ? EmptyExpenses()
-        : ListView.builder(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            itemCount: _expenses.length,
-            itemBuilder: _renderItem,
-          );
+    return PlatformScaffold(
+      body: _expenses.isEmpty
+          ? EmptyExpenses()
+          : ListView.builder(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              itemCount: _expenses.length,
+              itemBuilder: _renderItem,
+            ),
+    );
   }
 }

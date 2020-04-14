@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/services/api.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './currencies_screen.dart';
 import '../providers/groups.dart';
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_text_field.dart';
-import '../widgets/platform_button.dart';
-import '../widgets/platform_alert_dialog.dart';
+import '../utils/currencies.dart';
 
 class GroupScreen extends StatefulWidget {
   static const routeName = '/group';
@@ -24,6 +22,9 @@ class _GroupState extends State<GroupScreen> {
   bool _isLoading = false;
   String _groupId;
   final _nameController = TextEditingController();
+  final List<Currency> _currencies =
+      currencies.entries.map((entry) => Currency.fromMap(entry.value)).toList();
+
   String _currency = '';
 
   @override
@@ -54,6 +55,76 @@ class _GroupState extends State<GroupScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text('Error'),
         content: Text(message),
+        actions: <Widget>[
+          PlatformDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onCurrencyPress() async {
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      FocusScopeNode currentFocus = FocusScope.of(context);
+
+      if (!currentFocus.hasPrimaryFocus) {
+        currentFocus.unfocus();
+      }
+
+      showCupertinoModalPopup(
+          context: context, builder: (_) => _buildBottomPicker());
+    } else {
+      Map results = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => CurrenciesScreen(_currencies),
+          settings: RouteSettings(arguments: {
+            'code': _currency,
+          }),
+        ),
+      );
+      if (results != null && results.containsKey('code')) {
+        setState(() {
+          _currency = results['code'];
+        });
+      }
+    }
+  }
+
+  Widget _buildBottomPicker() {
+    return Container(
+      height: 216,
+      padding: const EdgeInsets.only(top: 6),
+      margin: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      color: CupertinoColors.systemBackground.resolveFrom(context),
+      child: DefaultTextStyle(
+        style: TextStyle(
+          color: CupertinoColors.label.resolveFrom(context),
+          fontSize: 22,
+        ),
+        child: GestureDetector(
+          // Blocks taps from propagating to the modal sheet and popping.
+          onTap: () {},
+          child: SafeArea(
+            top: false,
+            child: CupertinoPicker.builder(
+              itemExtent: 32.0,
+              backgroundColor:
+                  CupertinoColors.systemBackground.resolveFrom(context),
+              childCount: _currencies.length,
+              itemBuilder: (_, i) =>
+                  Text("${_currencies[i].code} - ${_currencies[i].name}"),
+              onSelectedItemChanged: (i) => {
+                setState(() {
+                  _currency = _currencies[i].code;
+                })
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -101,8 +172,13 @@ class _GroupState extends State<GroupScreen> {
               PlatformTextField(
                 autofocus: true,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Name',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Name',
                 ),
                 controller: _nameController,
                 onSubmitted: (_) {
@@ -113,30 +189,23 @@ class _GroupState extends State<GroupScreen> {
                 },
               ),
               SizedBox(height: 16),
-              ListTile(
-                contentPadding: const EdgeInsets.all(0),
-                leading: Text('Currency'),
-                trailing: _currency.isNotEmpty ? Text(_currency) : Text('N/A'),
-                onTap: () async {
-                  Map results = await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CurrenciesScreen(),
-                      settings: RouteSettings(arguments: {
-                        'code': _currency,
-                      }),
-                    ),
-                  );
-                  if (results != null && results.containsKey('code')) {
-                    setState(() {
-                      _currency = results['code'];
-                    });
-                  }
-                },
+              PlatformButton(
+                padding: const EdgeInsets.all(0),
+                androidFlat: (_) => MaterialFlatButtonData(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text('Currency'),
+                    _currency.isNotEmpty ? Text(_currency) : Text('N/A'),
+                  ],
+                ),
+                onPressed: _onCurrencyPress,
               ),
               SizedBox(height: 16),
               PlatformButton(
                 color: Theme.of(context).primaryColor,
-                colorBrightness: Brightness.dark,
+                android: (_) =>
+                    MaterialRaisedButtonData(colorBrightness: Brightness.dark),
                 child: _isLoading ? Text('Loading...') : Text('Next'),
                 onPressed: _isLoading ? null : _handleSubmit,
               ),

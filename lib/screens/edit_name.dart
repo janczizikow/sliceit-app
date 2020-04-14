@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import '../services/api.dart';
 import '../providers/account.dart';
-import '../widgets/platform_appbar.dart';
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_alert_dialog.dart';
-import '../widgets/platform_text_field.dart';
 
 class EditNameScreen extends StatefulWidget {
   static const routeName = '/edit-name';
@@ -62,6 +60,12 @@ class _EditNameState extends State<EditNameScreen> {
       builder: (_) => PlatformAlertDialog(
         title: Text('Error'),
         content: Text(message),
+        actions: <Widget>[
+          PlatformDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          )
+        ],
       ),
     );
   }
@@ -93,9 +97,10 @@ class _EditNameState extends State<EditNameScreen> {
     return PlatformScaffold(
       appBar: PlatformAppBar(
         title: Text('Edit Name'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.check),
+        trailingActions: <Widget>[
+          PlatformIconButton(
+            iosIcon: Icon(CupertinoIcons.check_mark),
+            androidIcon: Icon(Icons.check),
             onPressed: _isLoading ? null : _editName,
           ),
         ],
@@ -110,8 +115,13 @@ class _EditNameState extends State<EditNameScreen> {
                 autofocus: true,
                 controller: _firstNameController,
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'First name',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'First name',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'First name',
                 ),
                 onSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_lastNameFocusNode);
@@ -120,8 +130,13 @@ class _EditNameState extends State<EditNameScreen> {
               PlatformTextField(
                 controller: _lastNameController,
                 focusNode: _lastNameFocusNode,
-                decoration: InputDecoration(
-                  labelText: 'Last name',
+                android: (_) => MaterialTextFieldData(
+                  decoration: InputDecoration(
+                    labelText: 'Last name',
+                  ),
+                ),
+                ios: (_) => CupertinoTextFieldData(
+                  placeholder: 'Last name',
                 ),
                 onSubmitted: (_) {
                   FocusScopeNode currentFocus = FocusScope.of(context);

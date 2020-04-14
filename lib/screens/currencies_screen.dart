@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:sliceit/widgets/platform_appbar.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
-import '../widgets/platform_scaffold.dart';
-import '../widgets/platform_appbar.dart';
 import '../utils/currencies.dart';
 
 class CurrenciesScreen extends StatelessWidget {
-  final List<Currency> _currencies =
-      currencies.entries.map((entry) => Currency.fromMap(entry.value)).toList();
+  final List<Currency> currencies;
+
+  CurrenciesScreen(this.currencies);
 
   Widget _renderItem(BuildContext context, int i) {
-    final currency = _currencies[i];
+    final currency = currencies[i];
     return Column(
       children: <Widget>[
         ListTile(
@@ -34,13 +34,13 @@ class CurrenciesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        actions: <Widget>[
+        trailingActions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
             onPressed: () async {
               Currency result = await showSearch<Currency>(
                 context: context,
-                delegate: CurrenciesSearchDelegate(_currencies),
+                delegate: CurrenciesSearchDelegate(currencies),
               );
               if (result != null) {
                 Navigator.of(context).pop({'code': result.code});
@@ -52,7 +52,7 @@ class CurrenciesScreen extends StatelessWidget {
       body: SafeArea(
         child: ListView.builder(
           padding: EdgeInsets.symmetric(vertical: 8),
-          itemCount: _currencies.length,
+          itemCount: currencies.length,
           itemBuilder: _renderItem,
         ),
       ),

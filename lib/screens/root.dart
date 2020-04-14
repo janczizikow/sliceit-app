@@ -12,9 +12,7 @@ import '../providers/auth.dart';
 import '../providers/groups.dart';
 
 class Root extends StatefulWidget {
-  const Root({
-    Key key,
-  }) : super(key: key);
+  const Root({Key key}) : super(key: key);
 
   static const routeName = '/';
 

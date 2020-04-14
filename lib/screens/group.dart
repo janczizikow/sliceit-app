@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:sliceit/services/api.dart';
+import 'package:tuple/tuple.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './currencies_screen.dart';
 import '../providers/groups.dart';
+import '../providers/account.dart';
+import '../services/api.dart';
+import '../widgets/loading_dialog.dart';
 import '../utils/currencies.dart';
 
 class GroupScreen extends StatefulWidget {
   static const routeName = '/group';
   final Map<String, dynamic> arguments;
 
-  GroupScreen({this.arguments});
+  const GroupScreen({Key key, this.arguments}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _GroupState();
@@ -130,9 +133,7 @@ class _GroupState extends State<GroupScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     // TODO: validation
     String name = _nameController.text;
     try {
@@ -147,13 +148,48 @@ class _GroupState extends State<GroupScreen> {
       }
     } on ApiError catch (err) {
       _showErrorMessage(err.message);
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = true);
     } catch (err) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = true);
+    }
+  }
+
+  Future<void> _deleteGroup() async {
+    bool result = await showPlatformDialog(
+      context: context,
+      builder: (_) => PlatformAlertDialog(
+        title: Text('Delete group'),
+        content: Text('Are you sure? Deleting the group is irreversible.'),
+        actions: <Widget>[
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          PlatformDialogAction(
+            child: Text('Delete'),
+            onPressed: () => Navigator.of(context).pop(true),
+            ios: (_) => CupertinoDialogActionData(isDestructiveAction: true),
+          ),
+        ],
+      ),
+    );
+    if (result) {
+      showPlatformDialog(
+        androidBarrierDismissible: false,
+        context: context,
+        builder: (_) => LoadingDialog(),
+      );
+      try {
+        await Provider.of<GroupsProvider>(context, listen: false)
+            .deleteGroup(_groupId);
+        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+      } on ApiError catch (e) {
+        Navigator.of(context).pop();
+        _showErrorMessage(e.message);
+      } catch (e) {
+        Navigator.of(context).pop();
+        _showErrorMessage('Failed to delete group');
+      }
     }
   }
 
@@ -206,9 +242,32 @@ class _GroupState extends State<GroupScreen> {
                 color: Theme.of(context).primaryColor,
                 android: (_) =>
                     MaterialRaisedButtonData(colorBrightness: Brightness.dark),
-                child: _isLoading ? Text('Loading...') : Text('Next'),
+                child: _isLoading
+                    ? Text('Loading...')
+                    : Text(_groupId != null ? 'Save' : 'Next'),
                 onPressed: _isLoading ? null : _handleSubmit,
               ),
+              if (_groupId != null)
+                Selector2<AccountProvider, GroupsProvider,
+                    Tuple2<String, String>>(
+                  selector: (_, accountState, groupsState) => Tuple2(
+                    accountState.account.id,
+                    groupsState.byId(_groupId).creatorId,
+                  ),
+                  builder: (_, data, __) {
+                    return data.item1 == data.item2
+                        ? PlatformButton(
+                            androidFlat: (_) => MaterialFlatButtonData(
+                              textColor: Theme.of(context).errorColor,
+                              colorBrightness: Brightness.dark,
+                            ),
+                            child: Text('Delete group'),
+                            onPressed: _deleteGroup,
+                          )
+                        // TODO: leave group button
+                        : Container();
+                  },
+                )
             ],
           ),
         ),

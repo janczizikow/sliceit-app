@@ -10,8 +10,11 @@ class ThemeProvider with ChangeNotifier {
   static const THEME_PREFERENCE_KEY = 'THEME_PREFERENCE_KEY';
   static final ThemeData _darkTheme = ThemeData.dark();
   static final ThemeData _lightTheme = ThemeData.light();
+  final SharedPreferences prefs;
   ThemeType _themeType = ThemeType.light;
   ThemeData currentTheme = _lightTheme;
+
+  ThemeProvider(this.prefs);
 
   bool get isDark {
     return _themeType == ThemeType.dark;
@@ -44,13 +47,11 @@ class ThemeProvider with ChangeNotifier {
   }
 
   Future<ThemeType> loadPreferredTheme() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     int themeTypeIndex = prefs.getInt(THEME_PREFERENCE_KEY) ?? 0;
     return ThemeType.values.elementAt(themeTypeIndex);
   }
 
   Future<void> _storePreferredTheme(ThemeType themeType) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt(THEME_PREFERENCE_KEY, ThemeType.values.indexOf(themeType));
   }
 }

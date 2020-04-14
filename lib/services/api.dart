@@ -6,6 +6,7 @@ import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/group.dart';
+import '../models/invite.dart';
 import '../models/account.dart';
 import '../utils/constants.dart';
 
@@ -260,9 +261,8 @@ class Api {
       {int page = 1, List<dynamic> results = const []}) async {
     try {
       int limit = 50;
-      int offset = page * limit;
       Response<Map<String, dynamic>> response =
-          await _dio.get("/groups?page=$page&limit=$limit&offset=$offset");
+          await _dio.get("/groups?page=$page&limit=$limit");
       int nextPage = response.data['next'] != null ? page + 1 : null;
       List<dynamic> data = results + response.data['groups'];
       if (nextPage != null) {
@@ -270,6 +270,19 @@ class Api {
       } else {
         return Group.parseGroups(data);
       }
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<Group> fetchGroup(String id) async {
+    try {
+      final response = await _dio.get("/groups/$id");
+      return Group.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
@@ -321,6 +334,60 @@ class Api {
     try {
       await _dio.delete(
         "/groups/$groupId",
+      );
+      return true;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<List<Invite>> fetchGroupInvites(String groupId,
+      {int page = 1, List<dynamic> results = const []}) async {
+    try {
+      int limit = 50;
+      Response<Map<String, dynamic>> response =
+          await _dio.get("/groups/$groupId/invites/?page=$page&limit=$limit");
+      int nextPage = response.data['next'] != null ? page + 1 : null;
+      List<dynamic> data = results + response.data['invites'];
+      if (nextPage != null) {
+        return fetchGroupInvites(groupId, page: nextPage, results: data);
+      } else {
+        return data.map<Invite>((json) => Invite.fromJson(json)).toList();
+      }
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<Invite> createInvite(String groupId, String email) async {
+    try {
+      final response =
+          await _dio.post("/groups/$groupId/invites", data: {'email': email});
+      if (response.statusCode == 204) {
+        return null;
+      }
+      return Invite.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  Future<bool> deleteGroupInvite(String groupId, String inviteId) async {
+    try {
+      await _dio.delete(
+        "/groups/$groupId/invites/$inviteId",
       );
       return true;
     } on DioError catch (e) {

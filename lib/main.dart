@@ -1,30 +1,34 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sentry/sentry.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:provider/provider.dart';
+import 'package:sentry/sentry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliceit/providers/invites.dart';
 
-import './services/api.dart';
-import './providers/auth.dart';
 import './providers/account.dart';
-import './providers/theme.dart';
+import './providers/auth.dart';
 import './providers/groups.dart';
-import './screens/root.dart';
-import './screens/login.dart';
-import './screens/forgot_password.dart';
-import './screens/register.dart';
-import './screens/group.dart';
-import './screens/settings.dart';
-import './screens/edit_name.dart';
+import './providers/theme.dart';
 import './screens/edit_email.dart';
+import './screens/edit_name.dart';
+import './screens/forgot_password.dart';
+import './screens/group.dart';
+import './screens/group_invites.dart';
+import './screens/login.dart';
+import './screens/register.dart';
+import './screens/root.dart';
+import './screens/settings.dart';
+import './services/api.dart';
 import './widgets/no_animation_material_page_route.dart';
 
 Future<Null> main() async {
   await DotEnv().load('.env');
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   final SentryClient _sentry =
       new SentryClient(dsn: DotEnv().env['SENTRY_DNS']);
   FlutterError.onError = (FlutterErrorDetails details) async {
@@ -41,7 +45,7 @@ Future<Null> main() async {
   // an error handler that captures errors and reports them.
   // https://api.dartlang.org/stable/1.24.2/dart-async/Zone-class.html
   runZoned<Future<Null>>(() async {
-    runApp(new MyApp());
+    runApp(new MyApp(prefs));
   }, onError: (error, stackTrace) async {
     if (!kReleaseMode) {
       print(stackTrace);
@@ -56,17 +60,21 @@ Future<Null> main() async {
 }
 
 class MyApp extends StatefulWidget {
+  final SharedPreferences prefs;
+  MyApp(this.prefs);
+
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
   final Api _api = Api();
-  ThemeProvider themeProvider = ThemeProvider();
+  ThemeProvider themeProvider;
 
   @override
   void initState() {
     super.initState();
+    themeProvider = ThemeProvider(widget.prefs);
     _loadPreferredTheme();
   }
 
@@ -108,7 +116,17 @@ class _MyAppState extends State<MyApp> {
       case GroupScreen.routeName:
         return platformPageRoute(
           context: context,
-          builder: (context) => GroupScreen(arguments: settings.arguments),
+          builder: (context) => GroupScreen(
+            arguments: settings.arguments,
+          ),
+          settings: settings,
+        );
+      case GroupInvitesScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => GroupInvitesScreen(
+            groupId: settings.arguments,
+          ),
           settings: settings,
         );
       case SettingsScreen.routeName:
@@ -152,8 +170,10 @@ class _MyAppState extends State<MyApp> {
           update: (_, auth, previous) => GroupsProvider(
             api: _api,
             isAuthenticated: auth.isAuthenticated,
-            prev: previous.groups,
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => InvitesProvider(_api),
         ),
       ],
       child: Consumer<ThemeProvider>(

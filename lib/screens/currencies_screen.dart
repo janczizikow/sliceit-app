@@ -7,7 +7,7 @@ import '../utils/currencies.dart';
 class CurrenciesScreen extends StatelessWidget {
   final List<Currency> currencies;
 
-  CurrenciesScreen(this.currencies);
+  const CurrenciesScreen(this.currencies, {Key key}) : super(key: key);
 
   Widget _renderItem(BuildContext context, int i) {
     final currency = currencies[i];
@@ -25,7 +25,7 @@ class CurrenciesScreen extends StatelessWidget {
           title: Text(currency.name),
           onTap: () => Navigator.of(context).pop({'code': currency.code}),
         ),
-        Divider(height: 1),
+        const Divider(height: 1),
       ],
     );
   }
@@ -36,7 +36,7 @@ class CurrenciesScreen extends StatelessWidget {
       appBar: PlatformAppBar(
         trailingActions: <Widget>[
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () async {
               Currency result = await showSearch<Currency>(
                 context: context,
@@ -96,7 +96,7 @@ class CurrenciesSearchDelegate extends SearchDelegate<Currency> {
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
         },

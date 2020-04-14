@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:provider/provider.dart';
 
-import '../services/api.dart';
 import '../providers/account.dart';
+import '../services/api.dart';
 
 class EditEmailScreen extends StatefulWidget {
   static const routeName = '/edit-email';

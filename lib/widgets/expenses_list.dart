@@ -5,17 +5,7 @@ import './empty_expenses.dart';
 import '../models/expense.dart';
 
 class ExpensesList extends StatelessWidget {
-  final List<Expense> _expenses = [
-    Expense(
-      id: '1',
-      name: 'Groceries',
-      payerId: '1',
-      date: DateTime.now(),
-      createdAt: DateTime.now(),
-      currency: 'EUR',
-      amount: 10.00,
-    )
-  ];
+  final List<Expense> _expenses = [];
 
   Widget _renderItem(BuildContext context, int i) {
     return Column(

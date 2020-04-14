@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text('Login'),
+        title: const Text('Login'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email',
                   ),
                 ),
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 textInputAction: TextInputAction.go,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Password',
                   ),
                 ),
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 focusNode: _passwordFocusNode,
                 onSubmitted: (_) => _handleSubmit(),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Selector<Auth, bool>(
                 selector: (_, auth) => auth.isFetching,
                 builder: (_, isFetching, __) => PlatformButton(
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               PlatformButton(
                 androidFlat: (_) => MaterialFlatButtonData(),
-                child: Text('Forgot password?'),
+                child: const Text('Forgot password?'),
                 onPressed: _forgotPassword,
               ),
             ],

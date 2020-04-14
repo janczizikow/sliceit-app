@@ -8,6 +8,8 @@ import '../screens/group.dart';
 import '../screens/settings.dart';
 
 class AppDrawer extends StatefulWidget {
+  const AppDrawer({Key key}) : super(key: key);
+
   @override
   _AppDrawerState createState() => _AppDrawerState();
 }

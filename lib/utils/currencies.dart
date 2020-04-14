@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
+
+@immutable
 class Currency {
   final String name;
   final String symbol;
   final String code;
-  Currency({this.name, this.symbol, this.code});
+  const Currency({this.name, this.symbol, this.code});
 
   factory Currency.fromMap(Map<String, String> map) => Currency(
         name: map['name'],
@@ -11,7 +14,7 @@ class Currency {
       );
 }
 
-final Map<String, Map<String, String>> currencies = {
+const Map<String, Map<String, String>> currencies = const {
   "AED": {"name": "Emirati Dirham", "code": "AED", "symbol": ".د.ب"},
   "AFN": {"name": "Afghan Afghani", "code": "AFN", "symbol": "؋"},
   "ALL": {"name": "Albanian lek", "code": "ALL", "symbol": "lek"},

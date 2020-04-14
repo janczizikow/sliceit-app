@@ -4,6 +4,7 @@ class EmptyExpenses extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         CircleAvatar(
@@ -20,6 +21,7 @@ class EmptyExpenses extends StatelessWidget {
         Text(
           'No expenses',
           style: Theme.of(context).textTheme.body2.copyWith(fontSize: 18),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
         SizedBox(

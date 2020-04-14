@@ -16,6 +16,7 @@ import '../providers/auth.dart';
 import '../providers/account.dart';
 import '../providers/groups.dart';
 import '../widgets/avatar.dart';
+import '../widgets/loading_dialog.dart';
 import '../utils/constants.dart';
 
 enum MoreMenuOptions {
@@ -224,6 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           PlatformDialogAction(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text('Delete'),
+            ios: (_) => CupertinoDialogActionData(isDestructiveAction: true),
           ),
         ],
       ),
@@ -233,18 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showPlatformDialog(
         androidBarrierDismissible: false,
         context: context,
-        builder: (_) => PlatformAlertDialog(
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              PlatformCircularProgressIndicator(),
-              SizedBox(height: 12),
-              Text('Loading...'),
-            ],
-          ),
-        ),
+        builder: (_) => LoadingDialog(),
       );
       try {
         await Provider.of<AccountProvider>(context, listen: false)

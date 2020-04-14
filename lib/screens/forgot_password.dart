@@ -23,7 +23,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
         content: Text(message),
         actions: <Widget>[
           PlatformDialogAction(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           )
         ],
@@ -59,7 +59,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text('Reset password'),
+        title: const Text('Reset password'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -70,9 +70,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
               Text(
                 'Enter the email address and we’ll send you instructions to reset your password.',
               ),
-              SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               PlatformTextField(
                 autofocus: true,
                 autocorrect: false,
@@ -80,7 +78,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.send,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email',
                   ),
                 ),
@@ -89,9 +87,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
                 ),
                 onEditingComplete: _resetPassword,
               ),
-              SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               PlatformButton(
                 color: Theme.of(context).primaryColor,
                 android: (_) => MaterialRaisedButtonData(

@@ -96,7 +96,7 @@ class _EditNameState extends State<EditNameScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text('Edit Name'),
+        title: const Text('Edit Name'),
         trailingActions: <Widget>[
           PlatformIconButton(
             iosIcon: Icon(CupertinoIcons.check_mark),
@@ -116,7 +116,7 @@ class _EditNameState extends State<EditNameScreen> {
                 controller: _firstNameController,
                 textInputAction: TextInputAction.next,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'First name',
                   ),
                 ),
@@ -131,7 +131,7 @@ class _EditNameState extends State<EditNameScreen> {
                 controller: _lastNameController,
                 focusNode: _lastNameFocusNode,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Last name',
                   ),
                 ),

@@ -4,10 +4,11 @@ class SpeedDialLabel extends StatelessWidget {
   final String title;
   final String subTitle;
 
-  SpeedDialLabel({
+  const SpeedDialLabel({
+    Key key,
     @required this.title,
     @required this.subTitle,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

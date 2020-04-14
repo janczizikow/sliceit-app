@@ -70,6 +70,25 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _AndroidHome extends StatelessWidget {
+  final _tabs = <Widget>[
+    Tab(
+      child: Align(
+        alignment: Alignment.center,
+        child: const Text('Balance'),
+      ),
+    ),
+    Tab(
+      child: Align(
+        alignment: Alignment.center,
+        child: const Text('Expenses'),
+      ),
+    ),
+  ];
+  final _tabsViews = [
+    BalanceList(),
+    ExpensesList(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -125,32 +144,14 @@ class _AndroidHome extends StatelessWidget {
             indicator: TabBarIndicator(
               color: theme.primaryColorLight.withOpacity(0.3),
             ),
-            tabs: <Widget>[
-              Tab(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text('Balance'),
-                ),
-              ),
-              Tab(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text('Expenses'),
-                ),
-              ),
-            ],
+            tabs: _tabs,
           ),
         ),
-        body: TabBarView(
-          children: <Widget>[
-            BalanceList(),
-            ExpensesList(),
-          ],
-        ),
-        drawer: AppDrawer(),
+        body: TabBarView(children: _tabsViews),
+        drawer: const AppDrawer(),
         floatingActionButton: SpeedDial(
           tooltip: 'Add Expense or Payment',
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
           visible: true,
           curve: Curves.decelerate,
           overlayOpacity: theme.brightness == Brightness.dark ? 0.54 : 0.8,
@@ -160,7 +161,7 @@ class _AndroidHome extends StatelessWidget {
             SpeedDialChild(
               child: const Icon(Icons.shopping_basket),
               onTap: () {},
-              labelWidget: SpeedDialLabel(
+              labelWidget: const SpeedDialLabel(
                 title: 'New Expense',
                 subTitle: 'A purchase made for the group',
               ),
@@ -168,7 +169,7 @@ class _AndroidHome extends StatelessWidget {
             SpeedDialChild(
               child: const Icon(Icons.account_balance_wallet),
               onTap: () => {},
-              labelWidget: SpeedDialLabel(
+              labelWidget: const SpeedDialLabel(
                 title: 'New Payment',
                 subTitle: 'Record a payment made in the group',
               ),

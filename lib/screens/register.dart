@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text('Sign up'),
+        title: const Text('Sign up'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -105,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'First name',
                   ),
                 ),
@@ -121,7 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.next,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Last name',
                   ),
                 ),
@@ -138,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email',
                   ),
                 ),
@@ -155,7 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 focusNode: _passwordFocusNode,
                 textInputAction: TextInputAction.go,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Password',
                   ),
                 ),
@@ -164,7 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 onSubmitted: (_) => _handleSubmit(),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Selector<Auth, bool>(
                 selector: (_, auth) => auth.isFetching,
                 builder: (_, isFetching, __) => PlatformButton(

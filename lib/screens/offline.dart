@@ -37,6 +37,10 @@ class OfflineScreen extends StatelessWidget {
                     selector: (_, groups) =>
                         Tuple2(groups.status, groups.fetchGroups),
                     builder: (_, data, __) => PlatformButton(
+                      color: Theme.of(context).primaryColor,
+                      android: (_) => MaterialRaisedButtonData(
+                        colorBrightness: Brightness.dark,
+                      ),
                       child: Text('Try again'),
                       onPressed:
                           data.item1 == Status.PENDING ? null : data.item2,

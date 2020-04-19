@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/group.dart';
 import '../models/invite.dart';
 import '../models/account.dart';
+import '../models/expense.dart';
 import '../utils/constants.dart';
 
 class ApiError extends Error {
@@ -19,7 +20,7 @@ class ApiError extends Error {
   String toString() => 'ApiError:${this.message}';
 }
 
-class Api {
+class Api with ChangeNotifier {
   static final Api _instance = Api._internal();
   static final BaseOptions baseOptions = BaseOptions(
     baseUrl: kReleaseMode
@@ -38,6 +39,7 @@ class Api {
     ..transformer = FlutterTransformer();
   final _storage = FlutterSecureStorage();
   String accessToken;
+  int _forceLogoutTimestamp;
 
   factory Api() {
     return _instance;
@@ -64,7 +66,7 @@ class Api {
             String authorizationHeader = "Bearer $accessToken";
 
             // If the token has been updated, repeat directly.
-            if (authorizationHeader != null &&
+            if (accessToken != null &&
                 authorizationHeader != options.headers['Authorization']) {
               options.headers['Authorization'] = authorizationHeader;
               return _dio.request(options.path, options: options);
@@ -102,13 +104,16 @@ class Api {
               } on DioError catch (err) {
                 switch (err.type) {
                   case DioErrorType.RESPONSE:
-                    // TODO: FORCELOGOUT
-                    return err;
-                  default:
+                    _forceLogoutTimestamp =
+                        DateTime.now().millisecondsSinceEpoch;
+                    notifyListeners();
                     return null;
+                  default:
+                    return err;
                 }
               } catch (err) {
-                // TODO: FORCELOGOUT
+                _forceLogoutTimestamp = DateTime.now().millisecondsSinceEpoch;
+                notifyListeners();
                 return err;
               }
             }
@@ -118,6 +123,13 @@ class Api {
         },
       ),
     );
+  }
+
+  int forceLogoutTimestamp() => _forceLogoutTimestamp;
+
+  setForceLogoutTimestamp(int timestamp) {
+    _forceLogoutTimestamp = timestamp;
+    notifyListeners();
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -135,7 +147,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -165,7 +177,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -178,7 +190,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -199,7 +211,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -223,7 +235,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -236,7 +248,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -252,7 +264,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -274,7 +286,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -287,7 +299,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -306,7 +318,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -325,7 +337,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -340,7 +352,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -362,7 +374,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -379,7 +391,7 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
       }
     }
   }
@@ -394,7 +406,81 @@ class Api {
       if (e.response != null) {
         throw ApiError(_getErrorMessage(e.response.data));
       } else {
-        throw e;
+        rethrow;
+      }
+    }
+  }
+
+  Future<List<Expense>> fetchExpensesPage(
+    String groupId,
+    int page, {
+    int limit = 50,
+  }) async {
+    try {
+      final response =
+          await _dio.get("/groups/$groupId/expenses?page=$page&limit=$limit");
+      return response.data['expenses']
+          .map<Expense>((json) => Expense.fromJson(json))
+          .toList();
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  Future<Expense> createExpense({
+    @required String groupId,
+    @required String name,
+    @required int amount,
+    @required String payerId,
+    @required List<Map<String, Object>> shares,
+    @required String currency,
+    @required String date,
+  }) async {
+    try {
+      final response = await _dio.post("/groups/$groupId/expenses/", data: {
+        'name': name,
+        'amount': amount,
+        'payerId': payerId,
+        'shares': shares,
+        'currency': currency,
+        'date': date,
+      });
+      return Expense.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  Future<Expense> createPayment({
+    @required String groupId,
+    @required int amount,
+    @required String from,
+    @required String to,
+    @required String currency,
+    @required String date,
+  }) async {
+    try {
+      final response = await _dio.post("/groups/$groupId/payments/", data: {
+        'amount': amount,
+        'from': from,
+        'to': to,
+        'currency': currency,
+        'date': date,
+      });
+      return Expense.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(_getErrorMessage(e.response.data));
+      } else {
+        rethrow;
       }
     }
   }

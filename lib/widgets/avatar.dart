@@ -4,15 +4,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 class Avatar extends StatelessWidget {
   final String initals;
   final String avatar;
+  final double radius;
 
   Avatar({
     @required this.initals,
     this.avatar,
+    this.radius,
   });
 
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
+      radius: radius,
       child: (avatar != null && avatar.isNotEmpty)
           ? ClipOval(
               child: CachedNetworkImage(

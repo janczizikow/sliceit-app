@@ -5,10 +5,8 @@ import '../models/invite.dart';
 import '../services/api.dart';
 
 class InvitesProvider extends BaseProvider {
-  final Api api;
+  final Api _api = Api();
   final Map<String, List<Invite>> _invitesByGroupId = {};
-
-  InvitesProvider(this.api);
 
   get isFetching => status == Status.PENDING;
 
@@ -20,29 +18,24 @@ class InvitesProvider extends BaseProvider {
     return [];
   }
 
-  int byGroupIdCount(String groupId) {
+  int countByGroupId(String groupId) {
     if (_invitesByGroupId.containsKey(groupId)) {
       return _invitesByGroupId[groupId].length;
     }
     return 0;
   }
 
-  Future<void> fetchGroupInvites(String groupId) async {
-    status = Status.PENDING;
-    try {
-      final List<Invite> groupInvites = await api.fetchGroupInvites(groupId);
-      _invitesByGroupId[groupId] = groupInvites;
-      status = Status.RESOLVED;
-    } catch (e) {
-      status = Status.REJECTED;
-      throw e;
-    }
+  Future<List<Invite>> fetchGroupInvites(String groupId) async {
+    final List<Invite> groupInvites = await _api.fetchGroupInvites(groupId);
+    _invitesByGroupId[groupId] = groupInvites;
+    notifyListeners();
+    return groupInvites;
   }
 
   Future<bool> createInvite(String groupId, String email) async {
     status = Status.PENDING;
     try {
-      final Invite invite = await api.createInvite(groupId, email);
+      final Invite invite = await _api.createInvite(groupId, email);
       if (invite != null) {
         if (_invitesByGroupId?.containsKey(groupId) ?? false) {
           _invitesByGroupId[groupId].add(invite);
@@ -73,11 +66,16 @@ class InvitesProvider extends BaseProvider {
       _invitesByGroupId[groupId].removeAt(inviteIndex);
       notifyListeners();
       try {
-        await api.deleteGroupInvite(groupId, inviteId);
+        await _api.deleteGroupInvite(groupId, inviteId);
       } catch (err) {
         groupInvites.insert(inviteIndex, invite);
         notifyListeners();
       }
     }
+  }
+
+  void reset() {
+    _invitesByGroupId.clear();
+    status = Status.PENDING;
   }
 }

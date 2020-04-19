@@ -8,18 +8,17 @@ import '../utils/constants.dart';
 
 class Auth extends BaseProvider {
   final _storage = FlutterSecureStorage();
-  final Api api;
+  final Api _api = Api();
   String _accessToken;
 
-  Auth(this.api);
-
-  get isAuthenticated => _accessToken != null;
-  get isFetching => status == Status.PENDING;
+  bool get isAuthenticated => _accessToken != null;
+  bool get isFetching => status == Status.PENDING;
 
   Future<void> restoreTokens() async {
     String accessToken = await _storage.read(key: ACCESS_TOKEN_KEY);
+
     if (accessToken != _accessToken) {
-      api.accessToken = accessToken;
+      _api.accessToken = accessToken;
       _accessToken = accessToken;
       notifyListeners();
     }
@@ -29,7 +28,7 @@ class Auth extends BaseProvider {
     status = Status.PENDING;
 
     try {
-      final res = await api.login(email, password);
+      final res = await _api.login(email, password);
       _accessToken = res['accessToken'];
       status = Status.RESOLVED;
     } catch (err) {
@@ -47,7 +46,7 @@ class Auth extends BaseProvider {
     status = Status.PENDING;
 
     try {
-      final res = await api.register(
+      final res = await _api.register(
         firstName: firstName,
         lastName: lastName,
         email: email,
@@ -64,7 +63,7 @@ class Auth extends BaseProvider {
   Future<void> logout() async {
     await _storage.deleteAll();
     _accessToken = null;
-    api.accessToken = null;
+    _api.accessToken = null;
     status = Status.IDLE;
   }
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/invites.dart';
 import '../providers/groups.dart';
+import '../providers/invites.dart';
 import '../services/api.dart';
 
 class GroupInvitesScreen extends StatefulWidget {
@@ -18,16 +18,14 @@ class GroupInvitesScreen extends StatefulWidget {
 }
 
 class _GroupInvitesScreenState extends State<GroupInvitesScreen> {
+  Future<void> _fetchInvitesFuture;
   TextEditingController _emailController;
 
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController();
-    // https://www.didierboelens.com/2019/04/addpostframecallback/
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchInvites();
-    });
+    _fetchInvites();
   }
 
   @override
@@ -37,10 +35,10 @@ class _GroupInvitesScreenState extends State<GroupInvitesScreen> {
   }
 
   Future<void> _fetchInvites() async {
-    await Provider.of<InvitesProvider>(
-      context,
-      listen: false,
-    ).fetchGroupInvites(widget.groupId);
+    _fetchInvitesFuture = Future.microtask(() => Provider.of<InvitesProvider>(
+          context,
+          listen: false,
+        ).fetchGroupInvites(widget.groupId));
   }
 
   Future<void> _addInvite() async {
@@ -98,125 +96,166 @@ class _GroupInvitesScreenState extends State<GroupInvitesScreen> {
       appBar: PlatformAppBar(
         title: const Text('Invites'),
       ),
-      body: GestureDetector(
-        onTap: () {
-          FocusScopeNode currentFocus = FocusScope.of(context);
-          if (!currentFocus.hasPrimaryFocus) {
-            currentFocus.unfocus();
-          }
-        },
-        child: Column(
-          children: <Widget>[
-            Flexible(
-              child: (invites.isFetching &&
-                      invites.byGroupIdCount(widget.groupId) == 0)
-                  ? Center(
-                      child: PlatformCircularProgressIndicator(),
-                    )
-                  : invites.byGroupIdCount(widget.groupId) == 0
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 24,
-                              child: Container(
-                                alignment: Alignment.center,
-                                child: const Icon(
-                                  Icons.email,
-                                  size: 24,
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () {
+            FocusScopeNode currentFocus = FocusScope.of(context);
+            if (!currentFocus.hasPrimaryFocus) {
+              currentFocus.unfocus();
+            }
+          },
+          child: Column(
+            children: <Widget>[
+              Flexible(
+                child: FutureBuilder(
+                    future: _fetchInvitesFuture,
+                    builder: (_, AsyncSnapshot<void> snapshot) {
+                      if (snapshot.hasData) {
+                        return invites.countByGroupId(widget.groupId) == 0
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 24,
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      child: const Icon(
+                                        Icons.email,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No invites',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .body2
+                                        .copyWith(fontSize: 18),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.50,
+                                    child: Text(
+                                      'Add an invite by entering an email and pressing the button below',
+                                      style:
+                                          Theme.of(context).textTheme.caption,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : ListView.builder(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                itemCount:
+                                    invites.countByGroupId(widget.groupId),
+                                itemBuilder: (_, i) {
+                                  final invite =
+                                      invites.byGroupId(widget.groupId)[i];
+                                  return ListTile(
+                                    title: Text(
+                                      invite.email,
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(
+                                        Icons.delete_outline,
+                                        color: Theme.of(context).errorColor,
+                                      ),
+                                      onPressed: () => _deleteInvite(
+                                        invite.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text('Error'),
+                        );
+                      }
+                      return Center(
+                        child: PlatformCircularProgressIndicator(),
+                      );
+                    }),
+              ),
+              const Divider(height: 1),
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).platform == TargetPlatform.iOS
+                      ? CupertinoTheme.of(context).scaffoldBackgroundColor
+                      : Theme.of(context).cardColor,
+                ),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: PlatformTextField(
+                          autofocus: true,
+                          autocorrect: false,
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.send,
+                          android: (_) => MaterialTextFieldData(
+                            decoration: const InputDecoration.collapsed(
+                              hintText: 'Email',
+                            ),
+                          ),
+                          ios: (_) => CupertinoTextFieldData(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 6.0,
+                            ),
+                            placeholder: 'Email',
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: CupertinoDynamicColor.withBrightness(
+                                  color: Color(0x33000000),
+                                  darkColor: Color(0x33FFFFFF),
                                 ),
                               ),
+                              borderRadius: BorderRadius.circular(200),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No invites',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .body2
-                                  .copyWith(fontSize: 18),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 4),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.50,
-                              child: Text(
-                                'Add an invite by entering an email and pressing the button below',
-                                style: Theme.of(context).textTheme.caption,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: invites.byGroupIdCount(widget.groupId),
-                          itemBuilder: (_, i) {
-                            final invite = invites.byGroupId(widget.groupId)[i];
-                            return ListTile(
-                              title: Text(
-                                invite.email,
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  Icons.delete_outline,
-                                  color: Theme.of(context).errorColor,
-                                ),
-                                onPressed: () => _deleteInvite(
-                                  invite.id,
-                                ),
-                              ),
-                            );
+                          ),
+                          onSubmitted: (_) {
+                            if (!invites.isFetching) {
+                              _addInvite();
+                            }
                           },
                         ),
-            ),
-            const Divider(height: 1),
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-              ),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: PlatformTextField(
-                        autofocus: true,
-                        autocorrect: false,
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.send,
-                        android: (_) => MaterialTextFieldData(
-                          decoration: const InputDecoration.collapsed(
-                            hintText: 'Email',
+                      ),
+                      SizedBox(height: 1, width: 6),
+                      FittedBox(
+                        fit: BoxFit.contain,
+                        child: Container(
+                          padding: EdgeInsets.all(2),
+                          child: GestureDetector(
+                            onTap: invites.isFetching ? null : _addInvite,
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(200),
+                              ),
+                              child: PlatformWidget(
+                                  ios: (_) => const Icon(
+                                        CupertinoIcons.up_arrow,
+                                        color: Colors.white,
+                                      ),
+                                  android: (_) => const Icon(Icons.send)),
+                            ),
                           ),
                         ),
-                        ios: (_) => CupertinoTextFieldData(
-                          placeholder: 'Email',
-                        ),
-                        onSubmitted: (_) {
-                          if (!invites.isFetching) {
-                            _addInvite();
-                          }
-                        },
                       ),
-                    ),
-                    PlatformIconButton(
-                      ios: (_) => CupertinoIconButtonData(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(200),
-                      ),
-                      onPressed: invites.isFetching ? null : _addInvite,
-                      iosIcon: const Icon(
-                        CupertinoIcons.up_arrow,
-                        color: Colors.white,
-                      ),
-                      androidIcon: const Icon(Icons.send),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            )
-          ],
+            ],
+          ),
         ),
       ),
     );

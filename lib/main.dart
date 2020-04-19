@@ -9,21 +9,25 @@ import 'package:provider/provider.dart';
 import 'package:sentry/sentry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliceit/providers/invites.dart';
+import 'package:tuple/tuple.dart';
 
+import './services/api.dart';
 import './providers/account.dart';
 import './providers/auth.dart';
 import './providers/groups.dart';
 import './providers/theme.dart';
-import './screens/edit_email.dart';
-import './screens/edit_name.dart';
+import './providers/expenses.dart';
+import './screens/root.dart';
 import './screens/forgot_password.dart';
 import './screens/group.dart';
 import './screens/group_invites.dart';
 import './screens/login.dart';
 import './screens/register.dart';
-import './screens/root.dart';
 import './screens/settings.dart';
-import './services/api.dart';
+import './screens/edit_email.dart';
+import './screens/edit_name.dart';
+import './screens/new_payment.dart';
+import './screens/new_expense.dart';
 import './widgets/no_animation_material_page_route.dart';
 
 Future<Null> main() async {
@@ -68,7 +72,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final Api _api = Api();
+  final navigatorKey = GlobalKey<NavigatorState>();
   ThemeProvider themeProvider;
 
   @override
@@ -81,6 +85,29 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadPreferredTheme() async {
     ThemeType preferredTheme = await themeProvider.loadPreferredTheme();
     themeProvider.themeType = preferredTheme;
+  }
+
+  Future<void> _showForceLogoutDialog() async {
+    final context = navigatorKey.currentState.overlay.context;
+    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+    Provider.of<Api>(context, listen: false).setForceLogoutTimestamp(null);
+    await showPlatformDialog(
+        context: context,
+        androidBarrierDismissible: false,
+        builder: (_) {
+          return PlatformAlertDialog(
+            title: const Text('Unauthorized'),
+            content: const Text('Session expired, you will be logged out now'),
+            actions: <Widget>[
+              PlatformDialogAction(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
   }
 
   Route _generateRoute(RouteSettings settings) {
@@ -127,7 +154,20 @@ class _MyAppState extends State<MyApp> {
           builder: (context) => GroupInvitesScreen(
             groupId: settings.arguments,
           ),
+          fullscreenDialog: true,
           settings: settings,
+        );
+      case NewPaymentScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => NewPaymentScreen(),
+          fullscreenDialog: true,
+        );
+      case NewExpenseScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => NewExpenseScreen(),
+          fullscreenDialog: true,
         );
       case SettingsScreen.routeName:
         return platformPageRoute(
@@ -157,34 +197,77 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => Auth(_api),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => AccountProvider(_api),
+          create: (_) => Api(),
         ),
         ChangeNotifierProvider(
           create: (_) => themeProvider,
         ),
-        ChangeNotifierProxyProvider<Auth, GroupsProvider>(
-          create: (_) => GroupsProvider(api: _api, isAuthenticated: false),
-          update: (_, auth, previous) => GroupsProvider(
-            api: _api,
-            isAuthenticated: auth.isAuthenticated,
-          ),
+        ChangeNotifierProxyProvider<Api, Auth>(
+          create: (_) => Auth()..restoreTokens(),
+          update: (_, api, auth) {
+            if (api.forceLogoutTimestamp() != null) {
+              auth.logout();
+            }
+            return auth;
+          },
+        ),
+        ChangeNotifierProxyProvider<Api, AccountProvider>(
+          create: (_) => AccountProvider(),
+          update: (_, api, account) {
+            if (api.forceLogoutTimestamp() != null) {
+              account.reset();
+            }
+            return account;
+          },
+        ),
+        ChangeNotifierProxyProvider2<Auth, Api, GroupsProvider>(
+            create: (_) => GroupsProvider(),
+            update: (_, auth, api, groups) {
+              if (api.forceLogoutTimestamp() != null) {
+                groups.reset();
+              }
+              groups.isAuthenticated = auth.isAuthenticated;
+              return groups;
+            }),
+        ChangeNotifierProxyProvider<Api, InvitesProvider>(
+          create: (_) => InvitesProvider(),
+          update: (_, api, invites) {
+            if (api.forceLogoutTimestamp() != null) {
+              invites.reset();
+            }
+            return invites;
+          },
         ),
         ChangeNotifierProvider(
-          create: (_) => InvitesProvider(_api),
+          create: (_) => ExpensesProvider(),
         ),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (_, theme, __) => PlatformApp(
-          title: 'Sliceit',
-          initialRoute: Root.routeName,
-          android: (_) => MaterialAppData(
-            theme: theme.currentTheme,
-          ),
-          onGenerateRoute: _generateRoute,
-        ),
+      child: Selector2<ThemeProvider, Api, Tuple2<ThemeData, int>>(
+        selector: (
+          _,
+          theme,
+          api,
+        ) =>
+            Tuple2(theme.currentTheme, api.forceLogoutTimestamp()),
+        builder: (_, data, __) {
+          if (data.item2 != null) {
+            _showForceLogoutDialog();
+          }
+          return PlatformApp(
+            title: 'Sliceit',
+            initialRoute: Root.routeName,
+            navigatorKey: navigatorKey,
+            ios: (_) => CupertinoAppData(
+              theme: CupertinoThemeData(
+                brightness: data.item1.brightness,
+              ),
+            ),
+            android: (_) => MaterialAppData(
+              theme: data.item1,
+            ),
+            onGenerateRoute: _generateRoute,
+          );
+        },
       ),
     );
   }

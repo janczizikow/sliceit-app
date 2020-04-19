@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 
 import './member.dart';
 
@@ -45,5 +46,9 @@ class Group {
     final List<Group> result =
         json.map<Group>((json) => Group.fromJson(json)).toList();
     return result;
+  }
+
+  String memberFirstNameByUserId(String userId) {
+    return members.firstWhere((member) => member.userId == userId).firstName;
   }
 }

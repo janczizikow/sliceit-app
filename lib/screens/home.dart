@@ -5,6 +5,8 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 import './group.dart';
+import './new_payment.dart';
+import './new_expense.dart';
 import '../models/group.dart';
 import '../providers/account.dart';
 import '../providers/groups.dart';
@@ -28,12 +30,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _iosTabs = [
+  final _iosTabs = const [
     BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.home),
+      icon: const Icon(CupertinoIcons.home),
     ),
     BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.shopping_cart),
+      icon: const Icon(CupertinoIcons.shopping_cart),
     )
   ];
 
@@ -47,23 +49,32 @@ class _HomeScreenState extends State<HomeScreen> {
     return _AndroidHome();
   }
 
-  Widget _tabContent(BuildContext context, int i) {
-    return i == 0 ? BalanceList() : ExpensesList();
+  Widget _tabContent(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        return CupertinoTabView(builder: (context) {
+          return BalanceList();
+        });
+      case 1:
+        return CupertinoTabView(builder: (context) {
+          return CupertinoPageScaffold(
+            child: ExpensesList(),
+          );
+        });
+      default:
+        return Container();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return PlatformWidget(
       android: _buildAndroidHome,
-      ios: (_) => PlatformTabScaffold(
-        appBarBuilder: (_, i) => PlatformAppBar(
-          title: Selector<GroupsProvider, Group>(
-            selector: (_, groups) => groups.selectedGroup,
-            builder: (_, selectedGroup, __) => Text(selectedGroup.name),
-          ),
+      ios: (_) => CupertinoTabScaffold(
+        tabBar: CupertinoTabBar(
+          items: _iosTabs,
         ),
-        bodyBuilder: _tabContent,
-        items: _iosTabs,
+        tabBuilder: _tabContent,
       ),
     );
   }
@@ -149,32 +160,44 @@ class _AndroidHome extends StatelessWidget {
         ),
         body: TabBarView(children: _tabsViews),
         drawer: const AppDrawer(),
-        floatingActionButton: SpeedDial(
-          tooltip: 'Add Expense or Payment',
-          child: const Icon(Icons.add),
-          visible: true,
-          curve: Curves.decelerate,
-          overlayOpacity: theme.brightness == Brightness.dark ? 0.54 : 0.8,
-          overlayColor:
-              theme.brightness == Brightness.dark ? Colors.black : Colors.white,
-          children: [
-            SpeedDialChild(
-              child: const Icon(Icons.shopping_basket),
-              onTap: () {},
-              labelWidget: const SpeedDialLabel(
-                title: 'New Expense',
-                subTitle: 'A purchase made for the group',
+        floatingActionButton: Selector<GroupsProvider, Group>(
+          selector: (_, groups) => groups.selectedGroup,
+          builder: (_, selectedGroup, __) => SpeedDial(
+            tooltip: 'Add Expense or Payment',
+            child: const Icon(Icons.add),
+            visible: true,
+            curve: Curves.decelerate,
+            overlayOpacity: theme.brightness == Brightness.dark ? 0.54 : 0.8,
+            overlayColor: theme.brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
+            children: [
+              SpeedDialChild(
+                child: const Icon(Icons.shopping_basket),
+                onTap: () {
+                  Navigator.of(context).pushNamed(
+                    NewExpenseScreen.routeName,
+                  );
+                },
+                labelWidget: const SpeedDialLabel(
+                  title: 'New Expense',
+                  subTitle: 'A purchase made for the group',
+                ),
               ),
-            ),
-            SpeedDialChild(
-              child: const Icon(Icons.account_balance_wallet),
-              onTap: () => {},
-              labelWidget: const SpeedDialLabel(
-                title: 'New Payment',
-                subTitle: 'Record a payment made in the group',
+              SpeedDialChild(
+                child: const Icon(Icons.account_balance_wallet),
+                onTap: () {
+                  Navigator.of(context).pushNamed(
+                    NewPaymentScreen.routeName,
+                  );
+                },
+                labelWidget: const SpeedDialLabel(
+                  title: 'New Payment',
+                  subTitle: 'Record a payment made in the group',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

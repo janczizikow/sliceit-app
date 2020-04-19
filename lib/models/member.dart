@@ -21,7 +21,7 @@ class Member {
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
-      id: json['user']['id'],
+      id: json['id'],
       userId: json['user']['id'],
       groupId: json['groupId'],
       firstName: json['user']['firstName'],

@@ -26,4 +26,10 @@ class Invite {
           json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) => other is Invite && other.id == id;
 }

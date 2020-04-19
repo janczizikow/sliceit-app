@@ -6,31 +6,17 @@ import '../models/account.dart';
 import '../models/member.dart';
 import '../services/api.dart';
 
-class GroupsProvider with ChangeNotifier {
-  final Api api;
+class GroupsProvider extends BaseProvider {
+  final Api _api = Api();
   final List<Group> _groups = [];
   int _selectedGroupIndex = 0;
-  // FIXME: Figure out better way of doing this
-  // Not using BaseProvider class, due to notifyListeners() called after provider is disposed()
-  Status _status = Status.IDLE;
-
   String _selectedGroupId;
   int _lastFetchedTimestamp;
 
-  GroupsProvider({
-    @required this.api,
-    @required bool isAuthenticated,
-  }) {
-    if (isAuthenticated) {
+  set isAuthenticated(bool authenticated) {
+    if (authenticated) {
       fetchGroups();
     }
-  }
-
-  get status => _status;
-
-  set status(Status newStatus) {
-    _status = newStatus;
-    notifyListeners();
   }
 
   List<Group> get groups {
@@ -59,6 +45,13 @@ class GroupsProvider with ChangeNotifier {
         : null;
   }
 
+  String memberFirstName(String userId) {
+    return _groups[_selectedGroupIndex]
+        .members
+        .firstWhere((member) => member.userId == userId)
+        .firstName;
+  }
+
   selectGroup(String id) {
     int groupIndex = _groups.indexWhere((group) => group.id == id);
     if (groupIndex != -1) {
@@ -76,7 +69,7 @@ class GroupsProvider with ChangeNotifier {
     status = Status.PENDING;
 
     try {
-      final List<Group> groups = await api.fetchGroups();
+      final List<Group> groups = await _api.fetchGroups();
       _groups.clear();
       _groups.addAll(groups);
       if (_groups.isNotEmpty) {
@@ -86,14 +79,14 @@ class GroupsProvider with ChangeNotifier {
       status = Status.RESOLVED;
     } catch (e) {
       status = Status.REJECTED;
-      throw e;
+      rethrow;
     }
   }
 
   Future<void> fetchGroup(String id) async {
     int groupIndex = _groups.indexWhere((group) => group.id == id);
     if (groupIndex != -1) {
-      final Group group = await api.fetchGroup(id);
+      final Group group = await _api.fetchGroup(id);
       _groups[groupIndex] = group;
       notifyListeners();
     }
@@ -101,7 +94,7 @@ class GroupsProvider with ChangeNotifier {
 
   Future<void> createGroup(
       {String name, String currency, Account member}) async {
-    final Group group = await api.createGroup(name: name, currency: currency);
+    final Group group = await _api.createGroup(name: name, currency: currency);
     _groups.add(group);
     _selectedGroupIndex = _groups.length - 1;
     _selectedGroupId = group.id;
@@ -112,7 +105,7 @@ class GroupsProvider with ChangeNotifier {
       {String groupId, String name, String currency}) async {
     final groupIndex = _groups.indexWhere((group) => group.id == groupId);
     if (groupIndex != -1) {
-      final Group updatedGroup = await api.updateGroup(
+      final Group updatedGroup = await _api.updateGroup(
         groupId: groupId,
         name: name,
         currency: currency,
@@ -123,7 +116,7 @@ class GroupsProvider with ChangeNotifier {
   }
 
   Future<void> deleteGroup(String groupId) async {
-    await api.deleteGroup(groupId);
+    await _api.deleteGroup(groupId);
     _groups.removeWhere((group) => group.id == groupId);
     if (_groups.isNotEmpty) {
       _selectedGroupIndex = 0;

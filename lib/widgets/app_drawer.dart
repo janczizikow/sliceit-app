@@ -1,9 +1,9 @@
+import 'package:app_review/app_review.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:app_review/app_review.dart';
 
-import '../providers/theme.dart';
 import '../providers/groups.dart';
+import '../providers/theme.dart';
 import '../screens/group.dart';
 import '../screens/settings.dart';
 
@@ -30,19 +30,19 @@ class _AppDrawerState extends State<AppDrawer> {
   List<Widget> _renderItems() {
     return [
       ListTile(
-        leading: Icon(Icons.group),
-        title: Text('New Group'),
+        leading: const Icon(Icons.group),
+        title: const Text('New Group'),
         onTap: _openNewGroup,
       ),
       ListTile(
-        leading: Icon(Icons.settings),
-        title: Text('Settings'),
+        leading: const Icon(Icons.settings),
+        title: const Text('Settings'),
         onTap: _openSettings,
       ),
       ListTile(
         onTap: _requestReview,
-        leading: Icon(Icons.comment),
-        title: Text('Rate Sliceit'),
+        leading: const Icon(Icons.comment),
+        title: const Text('Rate Sliceit'),
       ),
     ].toList();
   }

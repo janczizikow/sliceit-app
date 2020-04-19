@@ -1,23 +1,25 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info/package_info.dart';
-import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import './edit_name.dart';
 import './edit_email.dart';
-import '../providers/base.dart';
-import '../providers/auth.dart';
+import './edit_name.dart';
 import '../providers/account.dart';
+import '../providers/auth.dart';
+import '../providers/base.dart';
+import '../providers/expenses.dart';
 import '../providers/groups.dart';
+import '../providers/invites.dart';
+import '../utils/constants.dart';
 import '../widgets/avatar.dart';
 import '../widgets/loading_dialog.dart';
-import '../utils/constants.dart';
 
 enum MoreMenuOptions {
   edit,
@@ -61,13 +63,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_scrollController.hasClients) {
       final double offset = _scrollController.offset;
       final double delta = _appBarHeight - kToolbarHeight;
-      bool tresholdReached = (_appBarHeight - offset) >
+      bool thresholdReached = (_appBarHeight - offset) >
           kToolbarHeight + 48 * 0.3; // 48 -> size of FAB
       final double t = (offset / delta).clamp(0.0, 1.0);
       setState(() {
         _fabOffsetTop = _appBarHeight - offset;
         _titlePadding = Tween<double>(begin: 16, end: 64).transform(t);
-        _isFabVisible = tresholdReached;
+        _isFabVisible = thresholdReached;
       });
     }
   }
@@ -78,10 +80,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Provider.of<AccountProvider>(context, listen: false).hasAvatar;
     ImageSource source = await showModalBottomSheet<ImageSource>(
         context: context,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(10.0),
-            topRight: Radius.circular(10.0),
+        shape: const RoundedRectangleBorder(
+          borderRadius: const BorderRadius.only(
+            topLeft: const Radius.circular(10.0),
+            topRight: const Radius.circular(10.0),
           ),
         ),
         builder: (_) {
@@ -89,15 +91,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               ListTile(
-                leading: Icon(Icons.photo_camera),
-                title: Text('Take photo'),
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Take photo'),
                 onTap: () {
                   Navigator.pop(context, ImageSource.camera);
                 },
               ),
               ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Upload from Gallery'),
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Upload from Gallery'),
                 onTap: () {
                   Navigator.pop(context, ImageSource.gallery);
                 },
@@ -132,11 +134,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showPlatformDialog(
         context: context,
         builder: (_) => PlatformAlertDialog(
-          title: Text('Error'),
-          content: Text('Pick image error'),
+          title: const Text('Error'),
+          content: const Text('Pick image error'),
           actions: <Widget>[
             PlatformDialogAction(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
             )
           ],
@@ -185,27 +187,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.pop(context);
   }
 
+  void _reset() {
+    Provider.of<AccountProvider>(context, listen: false).reset();
+    Provider.of<ExpensesProvider>(context, listen: false).reset();
+    Provider.of<GroupsProvider>(context, listen: false).reset();
+    Provider.of<InvitesProvider>(context, listen: false).reset();
+  }
+
   Future<void> _handleLogout() async {
     bool result = await showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Logout'),
-        content: Text('Are you sure you want to logout?'),
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
         actions: <Widget>[
           PlatformDialogAction(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           PlatformDialogAction(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Logout'),
+            child: const Text('Logout'),
           ),
         ],
       ),
     );
     if (result) {
-      Provider.of<GroupsProvider>(context, listen: false).reset();
       await Provider.of<Auth>(context, listen: false).logout();
+      _reset();
       Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
     }
   }
@@ -214,17 +223,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool result = await showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Delete Account'),
-        content: Text(
+        title: const Text('Delete Account'),
+        content: const Text(
             'Are you sure that you want to delete your account? This will immediately log you out of your account and you will not be able to log in again.'),
         actions: <Widget>[
           PlatformDialogAction(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           PlatformDialogAction(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete'),
+            child: const Text('Delete'),
             ios: (_) => CupertinoDialogActionData(isDestructiveAction: true),
           ),
         ],
@@ -240,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       try {
         await Provider.of<AccountProvider>(context, listen: false)
             .deleteAccount();
-        Provider.of<GroupsProvider>(context, listen: false).reset();
+        _reset();
         await Provider.of<Auth>(context, listen: false).logout();
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } catch (err) {
@@ -248,12 +257,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         showPlatformDialog(
           context: context,
           builder: (_) => PlatformAlertDialog(
-            title: Text('Error'),
-            content: Text(
+            title: const Text('Error'),
+            content: const Text(
                 'Failed to delete account. Please check your Internet connection and try again'),
             actions: <Widget>[
               PlatformDialogAction(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () =>
                     Navigator.of(context, rootNavigator: true).pop(),
               )
@@ -272,11 +281,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showPlatformDialog(
         context: context,
         builder: (_) => PlatformAlertDialog(
-          title: Text('Error'),
+          title: const Text('Error'),
           content: Text('Could not open $url'),
           actions: <Widget>[
             PlatformDialogAction(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
             )
           ],
@@ -312,20 +321,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     <PopupMenuEntry<MoreMenuOptions>>[
                   const PopupMenuItem<MoreMenuOptions>(
                     value: MoreMenuOptions.edit,
-                    child: ListTile(
+                    child: const ListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.edit),
-                      title: Text('Edit name'),
+                      leading: const Icon(Icons.edit),
+                      title: const Text('Edit name'),
                     ),
                   ),
                   const PopupMenuItem<MoreMenuOptions>(
                     value: MoreMenuOptions.logout,
-                    child: ListTile(
+                    child: const ListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.exit_to_app),
-                      title: Text('Logout'),
+                      leading: const Icon(Icons.exit_to_app),
+                      title: const Text('Logout'),
                     ),
                   ),
                 ],
@@ -372,9 +381,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               fit: BoxFit.cover,
                                             ),
                                           ),
-                                          Icon(Icons.warning,
-                                              color:
-                                                  Theme.of(context).errorColor),
+                                          Icon(
+                                            Icons.warning,
+                                            color: Theme.of(context).errorColor,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -399,7 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   initals: data.item3,
                                   avatar: data.item4,
                                 ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               ConstrainedBox(
                                 constraints: BoxConstraints(
                                   maxWidth:
@@ -436,12 +446,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selector: (_, provider) => provider.account?.email ?? '',
                   builder: (_, email, __) => ListTile(
                     title: Text(email),
-                    subtitle: Text('Tap to change email'),
+                    subtitle: const Text('Tap to change email'),
                     onTap: () => Navigator.of(context)
                         .pushNamed(EditEmailScreen.routeName),
                   ),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.only(
                     top: 16,
@@ -453,21 +463,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(color: Theme.of(context).accentColor),
                   ),
                 ),
-                ListTile(
-                  leading: Icon(Icons.notifications_none),
-                  title: Text('Notifications'),
+                const ListTile(
+                  leading: const Icon(Icons.notifications_none),
+                  title: const Text('Notifications'),
                 ),
-                Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.lock_outline),
-                  title: Text('Passcode Lock'),
+                const Divider(height: 1),
+                const ListTile(
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('Passcode Lock'),
                 ),
-                Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.language),
-                  title: Text('Language'),
+                const Divider(height: 1),
+                const ListTile(
+                  leading: const Icon(Icons.language),
+                  title: const Text('Language'),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.only(
                     top: 16,
@@ -480,32 +490,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 ListTile(
-                  leading: Icon(Icons.chat_bubble_outline),
-                  title: Text('Support'),
+                  leading: const Icon(Icons.chat_bubble_outline),
+                  title: const Text('Support'),
                   onTap: () => _launchURL(
                     'mailto:support@sliceitapp.com',
                     isEmail: true,
                   ),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 ListTile(
-                  leading: Icon(Icons.help_outline),
-                  title: Text('FAQ'),
+                  leading: const Icon(Icons.help_outline),
+                  title: const Text('FAQ'),
                   onTap: () => _launchURL('faq'),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 ListTile(
-                  leading: Icon(Icons.info_outline),
-                  title: Text('Acknowledgements'),
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Acknowledgements'),
                   onTap: () => _launchURL('acknowledgements'),
                 ),
                 Divider(height: 1),
                 ListTile(
-                  leading: Icon(Icons.security),
-                  title: Text('Privacy Policy'),
+                  leading: const Icon(Icons.security),
+                  title: const Text('Privacy Policy'),
                   onTap: () => _launchURL('privacy'),
                 ),
-                Divider(height: 1),
+                const Divider(height: 1),
                 FutureBuilder(
                   future: _loadPackageInfo,
                   builder: (_, snapshot) {
@@ -542,7 +552,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Visibility(
               visible: _isFabVisible,
               child: FloatingActionButton(
-                child: Icon(Icons.photo_camera),
+                child: const Icon(Icons.photo_camera),
                 onPressed: _showBottomSheet,
               ),
             ),

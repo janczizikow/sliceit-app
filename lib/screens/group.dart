@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
-import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 import './currencies_screen.dart';
-import '../providers/groups.dart';
 import '../providers/account.dart';
+import '../providers/groups.dart';
 import '../services/api.dart';
-import '../widgets/loading_dialog.dart';
 import '../utils/currencies.dart';
+import '../widgets/loading_dialog.dart';
 
 class GroupScreen extends StatefulWidget {
   static const routeName = '/group';
@@ -56,11 +56,11 @@ class _GroupState extends State<GroupScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: <Widget>[
           PlatformDialogAction(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           )
         ],
@@ -158,15 +158,16 @@ class _GroupState extends State<GroupScreen> {
     bool result = await showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Delete group'),
-        content: Text('Are you sure? Deleting the group is irreversible.'),
+        title: const Text('Delete group'),
+        content:
+            const Text('Are you sure? Deleting the group is irreversible.'),
         actions: <Widget>[
           PlatformDialogAction(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           PlatformDialogAction(
-            child: Text('Delete'),
+            child: const Text('Delete'),
             onPressed: () => Navigator.of(context).pop(true),
             ios: (_) => CupertinoDialogActionData(isDestructiveAction: true),
           ),
@@ -197,7 +198,9 @@ class _GroupState extends State<GroupScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: _groupId != null ? Text('Edit group') : Text('New group'),
+        title: _groupId != null
+            ? const Text('Edit group')
+            : const Text('New group'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -209,7 +212,7 @@ class _GroupState extends State<GroupScreen> {
                 autofocus: true,
                 textInputAction: TextInputAction.next,
                 android: (_) => MaterialTextFieldData(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Name',
                   ),
                 ),
@@ -224,15 +227,15 @@ class _GroupState extends State<GroupScreen> {
                   }
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               PlatformButton(
                 padding: const EdgeInsets.all(0),
                 androidFlat: (_) => MaterialFlatButtonData(),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text('Currency'),
-                    _currency.isNotEmpty ? Text(_currency) : Text('N/A'),
+                    const Text('Currency'),
+                    _currency.isNotEmpty ? Text(_currency) : const Text('N/A'),
                   ],
                 ),
                 onPressed: _onCurrencyPress,
@@ -243,7 +246,7 @@ class _GroupState extends State<GroupScreen> {
                 android: (_) =>
                     MaterialRaisedButtonData(colorBrightness: Brightness.dark),
                 child: _isLoading
-                    ? Text('Loading...')
+                    ? const Text('Loading...')
                     : Text(_groupId != null ? 'Save' : 'Next'),
                 onPressed: _isLoading ? null : _handleSubmit,
               ),
@@ -261,7 +264,7 @@ class _GroupState extends State<GroupScreen> {
                               textColor: Theme.of(context).errorColor,
                               colorBrightness: Brightness.dark,
                             ),
-                            child: Text('Delete group'),
+                            child: const Text('Delete group'),
                             onPressed: _deleteGroup,
                           )
                         // TODO: leave group button

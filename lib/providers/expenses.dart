@@ -5,8 +5,10 @@ import '../models/expense.dart';
 import '../services/api.dart';
 
 class ExpensesProvider extends BaseProvider {
-  final Api _api = Api();
+  final Api _api;
   final Map<String, List<Expense>> _expensesByGroupId = {};
+
+  ExpensesProvider(this._api);
 
   List<Expense> byGroupId(String groupId) {
     if (_expensesByGroupId.containsKey(groupId)) {

@@ -3,8 +3,10 @@ import '../models/account.dart';
 import '../services/api.dart';
 
 class AccountProvider extends BaseProvider {
-  final Api _api = Api();
+  final Api _api;
   Account _account;
+
+  AccountProvider(this._api);
 
   Account get account => _account;
 

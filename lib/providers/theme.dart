@@ -24,16 +24,6 @@ class ThemeProvider with ChangeNotifier {
     return _themeType == ThemeType.light;
   }
 
-  set themeType(ThemeType themeType) {
-    if (themeType == ThemeType.light) {
-      currentTheme = _lightTheme;
-    } else {
-      currentTheme = _darkTheme;
-    }
-    _themeType = themeType;
-    notifyListeners();
-  }
-
   void toggleTheme() {
     if (_themeType == ThemeType.light) {
       _themeType = ThemeType.dark;
@@ -42,13 +32,20 @@ class ThemeProvider with ChangeNotifier {
       _themeType = ThemeType.light;
       currentTheme = _lightTheme;
     }
-    _storePreferredTheme(_themeType);
     notifyListeners();
+    _storePreferredTheme(_themeType);
   }
 
-  Future<ThemeType> loadPreferredTheme() async {
+  Future<void> loadPreferredTheme() async {
     int themeTypeIndex = prefs.getInt(THEME_PREFERENCE_KEY) ?? 0;
-    return ThemeType.values.elementAt(themeTypeIndex);
+    ThemeType themeType = ThemeType.values.elementAt(themeTypeIndex);
+    if (themeType == ThemeType.light) {
+      currentTheme = _lightTheme;
+    } else {
+      currentTheme = _darkTheme;
+    }
+    _themeType = themeType;
+    notifyListeners();
   }
 
   Future<void> _storePreferredTheme(ThemeType themeType) async {

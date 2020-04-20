@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import './forgot_password.dart';
-import '../services/api.dart';
-import '../providers/auth.dart';
+import 'package:provider/provider.dart';
+import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/screens/forgot_password.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -38,11 +37,11 @@ class _LoginScreenState extends State<LoginScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: <Widget>[
           PlatformDialogAction(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           )
         ],
@@ -70,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await Provider.of<Auth>(context, listen: false)
           .login(email: email, password: password);
       Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-    } on ApiError catch (err) {
+    } on DioError catch (err) {
       _showErrorMessage(err.message);
     } catch (err) {
       _showErrorMessage('Failed to authenticate');
@@ -124,15 +123,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 onSubmitted: (_) => _handleSubmit(),
               ),
               const SizedBox(height: 16),
-              Selector<Auth, bool>(
-                selector: (_, auth) => auth.isFetching,
-                builder: (_, isFetching, __) => PlatformButton(
+              Selector<Auth, AuthStatus>(
+                selector: (_, auth) => auth.status,
+                builder: (_, status, __) => PlatformButton(
                   color: Theme.of(context).primaryColor,
                   android: (_) => MaterialRaisedButtonData(
                     colorBrightness: Brightness.dark,
                   ),
-                  child: isFetching ? Text('Loading...') : Text('Login'),
-                  onPressed: isFetching ? null : _authenticate,
+                  child: status == AuthStatus.AUTHENTICATING
+                      ? const Text('Loading...')
+                      : const Text('Login'),
+                  onPressed: status == AuthStatus.AUTHENTICATING
+                      ? null
+                      : _authenticate,
                 ),
               ),
               PlatformButton(

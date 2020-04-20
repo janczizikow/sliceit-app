@@ -82,7 +82,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 ),
               ),
             ],
-            accountName: Text('Group'),
+            accountName: const Text('Group'),
             accountEmail: Text(selectedGroup.name),
             onDetailsPressed: _toggleShowGroups,
           ),

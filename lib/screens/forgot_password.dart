@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import '../services/api.dart';
+import 'package:provider/provider.dart';
+import 'package:sliceit/services/api.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   static const routeName = '/forgot-password';
@@ -11,7 +11,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPasswordScreen> {
-  final _api = Api();
   final _emailController = TextEditingController();
   var _isLoading = false;
 
@@ -36,7 +35,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
     final email = _emailController.text;
 
     try {
-      await _api.resetPassword(email);
+      await Provider.of<Api>(context, listen: false).resetPassword(email);
       _emailController.clear();
       _showDialog(
           title: 'Success', message: "Reset instructions were sent to $email!");
@@ -67,7 +66,7 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text(
+              const Text(
                 'Enter the email address and we’ll send you instructions to reset your password.',
               ),
               const SizedBox(height: 16),

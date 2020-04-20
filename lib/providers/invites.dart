@@ -5,8 +5,10 @@ import '../models/invite.dart';
 import '../services/api.dart';
 
 class InvitesProvider extends BaseProvider {
-  final Api _api = Api();
   final Map<String, List<Invite>> _invitesByGroupId = {};
+  final Api _api;
+
+  InvitesProvider(this._api);
 
   get isFetching => status == Status.PENDING;
 
@@ -76,6 +78,6 @@ class InvitesProvider extends BaseProvider {
 
   void reset() {
     _invitesByGroupId.clear();
-    status = Status.PENDING;
+    status = Status.IDLE;
   }
 }

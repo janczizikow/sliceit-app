@@ -8,27 +8,26 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry/sentry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliceit/providers/account.dart';
+import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/providers/expenses.dart';
+import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/providers/invites.dart';
+import 'package:sliceit/providers/theme.dart';
+import 'package:sliceit/screens/edit_email.dart';
+import 'package:sliceit/screens/edit_name.dart';
+import 'package:sliceit/screens/forgot_password.dart';
+import 'package:sliceit/screens/group.dart';
+import 'package:sliceit/screens/group_invites.dart';
+import 'package:sliceit/screens/login.dart';
+import 'package:sliceit/screens/new_expense.dart';
+import 'package:sliceit/screens/new_payment.dart';
+import 'package:sliceit/screens/register.dart';
+import 'package:sliceit/screens/root.dart';
+import 'package:sliceit/screens/settings.dart';
+import 'package:sliceit/services/api.dart';
+import 'package:sliceit/widgets/no_animation_material_page_route.dart';
 import 'package:tuple/tuple.dart';
-
-import './services/api.dart';
-import './providers/account.dart';
-import './providers/auth.dart';
-import './providers/groups.dart';
-import './providers/theme.dart';
-import './providers/expenses.dart';
-import './screens/root.dart';
-import './screens/forgot_password.dart';
-import './screens/group.dart';
-import './screens/group_invites.dart';
-import './screens/login.dart';
-import './screens/register.dart';
-import './screens/settings.dart';
-import './screens/edit_email.dart';
-import './screens/edit_name.dart';
-import './screens/new_payment.dart';
-import './screens/new_expense.dart';
-import './widgets/no_animation_material_page_route.dart';
 
 Future<Null> main() async {
   await DotEnv().load('.env');
@@ -45,7 +44,7 @@ Future<Null> main() async {
     }
   };
 
-  // This creates a [Zone] that contains the Flutter application and stablishes
+  // This creates a [Zone] that contains the Flutter application and establishes
   // an error handler that captures errors and reports them.
   // https://api.dartlang.org/stable/1.24.2/dart-async/Zone-class.html
   runZoned<Future<Null>>(() async {
@@ -73,24 +72,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final navigatorKey = GlobalKey<NavigatorState>();
-  ThemeProvider themeProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    themeProvider = ThemeProvider(widget.prefs);
-    _loadPreferredTheme();
-  }
-
-  Future<void> _loadPreferredTheme() async {
-    ThemeType preferredTheme = await themeProvider.loadPreferredTheme();
-    themeProvider.themeType = preferredTheme;
-  }
+  final Auth _auth = Auth();
 
   Future<void> _showForceLogoutDialog() async {
     final context = navigatorKey.currentState.overlay.context;
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-    Provider.of<Api>(context, listen: false).setForceLogoutTimestamp(null);
+    Provider.of<Auth>(context, listen: false).forceLogoutTimestamp = null;
     await showPlatformDialog(
         context: context,
         androidBarrierDismissible: false,
@@ -197,77 +184,78 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => Api(),
+          create: (_) => ThemeProvider(widget.prefs)..loadPreferredTheme(),
         ),
-        ChangeNotifierProvider(
-          create: (_) => themeProvider,
+        ChangeNotifierProvider<Auth>(
+          create: (_) => _auth..restoreTokens(),
         ),
-        ChangeNotifierProxyProvider<Api, Auth>(
-          create: (_) => Auth()..restoreTokens(),
-          update: (_, api, auth) {
-            if (api.forceLogoutTimestamp() != null) {
-              auth.logout();
-            }
-            return auth;
-          },
-        ),
-        ChangeNotifierProxyProvider<Api, AccountProvider>(
-          create: (_) => AccountProvider(),
-          update: (_, api, account) {
-            if (api.forceLogoutTimestamp() != null) {
-              account.reset();
-            }
-            return account;
-          },
-        ),
-        ChangeNotifierProxyProvider2<Auth, Api, GroupsProvider>(
-            create: (_) => GroupsProvider(),
-            update: (_, auth, api, groups) {
-              if (api.forceLogoutTimestamp() != null) {
-                groups.reset();
-              }
-              groups.isAuthenticated = auth.isAuthenticated;
-              return groups;
-            }),
-        ChangeNotifierProxyProvider<Api, InvitesProvider>(
-          create: (_) => InvitesProvider(),
-          update: (_, api, invites) {
-            if (api.forceLogoutTimestamp() != null) {
-              invites.reset();
-            }
-            return invites;
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ExpensesProvider(),
+        Provider<Api>(
+          create: (_) => Api(_auth),
         ),
       ],
-      child: Selector2<ThemeProvider, Api, Tuple2<ThemeData, int>>(
-        selector: (
-          _,
-          theme,
-          api,
-        ) =>
-            Tuple2(theme.currentTheme, api.forceLogoutTimestamp()),
-        builder: (_, data, __) {
-          if (data.item2 != null) {
-            _showForceLogoutDialog();
-          }
-          return PlatformApp(
-            title: 'Sliceit',
-            initialRoute: Root.routeName,
-            navigatorKey: navigatorKey,
-            ios: (_) => CupertinoAppData(
-              theme: CupertinoThemeData(
-                brightness: data.item1.brightness,
-              ),
+      child: Consumer<Api>(
+        builder: (_, api, __) => MultiProvider(
+          providers: [
+            ChangeNotifierProxyProvider2<Api, Auth, AccountProvider>(
+              create: (_) => AccountProvider(api),
+              update: (_, api, auth, account) {
+                if (auth.forceLogoutTimestamp != null) {
+                  account.reset();
+                }
+                return account;
+              },
             ),
-            android: (_) => MaterialAppData(
-              theme: data.item1,
+            ChangeNotifierProxyProvider2<Api, Auth, GroupsProvider>(
+                create: (_) => GroupsProvider(api),
+                update: (_, api, auth, groups) {
+                  if (auth.forceLogoutTimestamp != null) {
+                    groups.reset();
+                  }
+                  groups.isAuthenticated =
+                      auth.status == AuthStatus.AUTHENTICATED;
+                  return groups;
+                }),
+            ChangeNotifierProxyProvider2<Api, Auth, InvitesProvider>(
+              create: (_) => InvitesProvider(api),
+              update: (_, api, auth, invites) {
+                if (auth.forceLogoutTimestamp != null) {
+                  invites.reset();
+                }
+                return invites;
+              },
             ),
-            onGenerateRoute: _generateRoute,
-          );
-        },
+            ChangeNotifierProvider(
+              create: (_) => ExpensesProvider(api),
+            ),
+          ],
+          child: Selector2<ThemeProvider, Auth, Tuple2<ThemeData, int>>(
+            selector: (
+              ___,
+              theme,
+              auth,
+            ) =>
+                Tuple2(theme.currentTheme, auth.forceLogoutTimestamp),
+            builder: (_, data, __) {
+              if (data.item2 != null) {
+                _showForceLogoutDialog();
+              }
+              return PlatformApp(
+                title: 'Sliceit',
+                initialRoute: Root.routeName,
+                navigatorKey: navigatorKey,
+                ios: (_) => CupertinoAppData(
+                  theme: CupertinoThemeData(
+                    brightness: data.item1.brightness,
+                  ),
+                ),
+                android: (_) => MaterialAppData(
+                  theme: data.item1,
+                ),
+                onGenerateRoute: _generateRoute,
+              );
+            },
+          ),
+        ),
       ),
     );
   }

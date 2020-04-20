@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import '../providers/base.dart';
-import '../providers/groups.dart';
+import 'package:provider/provider.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:tuple/tuple.dart';
 
 class OfflineScreen extends StatelessWidget {
   @override
@@ -41,7 +40,7 @@ class OfflineScreen extends StatelessWidget {
                       android: (_) => MaterialRaisedButtonData(
                         colorBrightness: Brightness.dark,
                       ),
-                      child: Text('Try again'),
+                      child: const Text('Try again'),
                       onPressed:
                           data.item1 == Status.PENDING ? null : data.item2,
                     ),

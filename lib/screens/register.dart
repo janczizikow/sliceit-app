@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import '../providers/auth.dart';
-import '../services/api.dart';
+import 'package:provider/provider.dart';
+import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/services/api.dart';
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = '/register';
@@ -165,15 +164,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onSubmitted: (_) => _handleSubmit(),
               ),
               const SizedBox(height: 16),
-              Selector<Auth, bool>(
-                selector: (_, auth) => auth.isFetching,
-                builder: (_, isFetching, __) => PlatformButton(
+              Selector<Auth, AuthStatus>(
+                selector: (_, auth) => auth.status,
+                builder: (_, status, __) => PlatformButton(
                   color: Theme.of(context).primaryColor,
                   android: (_) => MaterialRaisedButtonData(
                     colorBrightness: Brightness.dark,
                   ),
-                  child: isFetching ? Text('Loading...') : Text('Register'),
-                  onPressed: isFetching ? null : _register,
+                  child: status == AuthStatus.AUTHENTICATING
+                      ? Text('Loading...')
+                      : Text('Register'),
+                  onPressed:
+                      status == AuthStatus.AUTHENTICATING ? null : _register,
                 ),
               ),
             ],

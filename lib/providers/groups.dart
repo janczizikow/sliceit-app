@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import './base.dart';
 
 import '../models/group.dart';
@@ -7,11 +6,12 @@ import '../models/member.dart';
 import '../services/api.dart';
 
 class GroupsProvider extends BaseProvider {
-  final Api _api = Api();
+  final Api _api;
   final List<Group> _groups = [];
   int _selectedGroupIndex = 0;
   String _selectedGroupId;
-  int _lastFetchedTimestamp;
+
+  GroupsProvider(this._api);
 
   set isAuthenticated(bool authenticated) {
     if (authenticated) {
@@ -23,11 +23,7 @@ class GroupsProvider extends BaseProvider {
     return _groups;
   }
 
-  bool get hasGroups => groups.isNotEmpty;
-
-  bool get needsSync {
-    return _lastFetchedTimestamp == null;
-  }
+  bool get isNotEmpty => groups.isNotEmpty;
 
   List<Member> get selectedGroupMembers {
     return _selectedGroupIndex < _groups.length
@@ -72,10 +68,11 @@ class GroupsProvider extends BaseProvider {
       final List<Group> groups = await _api.fetchGroups();
       _groups.clear();
       _groups.addAll(groups);
+
       if (_groups.isNotEmpty) {
         _selectedGroupId = _groups[_selectedGroupIndex].id;
       }
-      _lastFetchedTimestamp = DateTime.now().millisecondsSinceEpoch;
+
       status = Status.RESOLVED;
     } catch (e) {
       status = Status.REJECTED;
@@ -132,7 +129,6 @@ class GroupsProvider extends BaseProvider {
     _groups.clear();
     _selectedGroupIndex = 0;
     _selectedGroupId = null;
-    _lastFetchedTimestamp = null;
     status = Status.IDLE;
   }
 }

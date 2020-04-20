@@ -1,15 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
-import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import '../models/group.dart';
-import '../models/invite.dart';
-import '../models/account.dart';
-import '../models/expense.dart';
-import '../utils/constants.dart';
+import 'package:sliceit/models/account.dart';
+import 'package:sliceit/models/expense.dart';
+import 'package:sliceit/models/group.dart';
+import 'package:sliceit/models/invite.dart';
+import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/utils/config.dart';
 
 class ApiError extends Error {
   final String message;
@@ -20,38 +19,20 @@ class ApiError extends Error {
   String toString() => 'ApiError:${this.message}';
 }
 
-class Api with ChangeNotifier {
-  static final Api _instance = Api._internal();
-  static final BaseOptions baseOptions = BaseOptions(
-    baseUrl: kReleaseMode
-        ? 'https://sliceit.herokuapp.com/api/v1'
-        : 'http://192.168.178.111:3000/api/v1',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-    connectTimeout: 5000,
-    receiveTimeout: 3000,
-    contentType: 'application/json',
-  );
-  final Dio _dio = new Dio(baseOptions)..transformer = FlutterTransformer();
-  final Dio _refreshDio = new Dio(baseOptions)
-    ..transformer = FlutterTransformer();
-  final _storage = FlutterSecureStorage();
-  String accessToken;
-  int _forceLogoutTimestamp;
+class Api {
+  final Dio _dio = new Dio(dioBaseOptions)..transformer = FlutterTransformer();
+  Auth _authService;
 
-  factory Api() {
-    return _instance;
-  }
-
-  Api._internal() {
+  Api(this._authService) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (RequestOptions options) async {
+          String accessToken = _authService.getAccessToken();
+
           if (accessToken != null) {
             options.headers['Authorization'] = "Bearer $accessToken";
           }
+
           return options;
         },
         onResponse: (Response response) async {
@@ -59,10 +40,13 @@ class Api with ChangeNotifier {
         },
         onError: (DioError e) async {
           RegExp regExp = new RegExp(r'(login|register|google)');
+
           if (e.response?.statusCode == 401 && e.response?.request?.path != null
               ? !regExp.hasMatch(e.response.request.path)
               : false) {
             RequestOptions options = e.response.request;
+            String accessToken = _authService.getAccessToken();
+            String refreshToken = _authService.getRefreshToken();
             String authorizationHeader = "Bearer $accessToken";
 
             // If the token has been updated, repeat directly.
@@ -72,8 +56,6 @@ class Api with ChangeNotifier {
               return _dio.request(options.path, options: options);
             }
 
-            String refreshToken = await _storage.read(key: REFRESH_TOKEN_KEY);
-
             if (refreshToken != null) {
               try {
                 // Lock to block the incoming request until the token updated
@@ -81,39 +63,30 @@ class Api with ChangeNotifier {
                 _dio.interceptors.responseLock.lock();
                 _dio.interceptors.errorLock.lock();
 
-                // request new tokens & store them
-                final refreshResponse = await _refreshDio.post('/auth/refresh',
-                    data: {'refreshToken': refreshToken});
-                await _storeTokens(
-                  accessToken: refreshResponse.data['accessToken'],
-                  refreshToken: refreshResponse.data['refreshToken'],
-                );
+                // request new tokens
+                await _authService.refreshTokens();
 
-                // update auth header with the new access token
-                accessToken = refreshResponse.data['accessToken'];
+                // update request auth header with the new access token
                 options.headers['Authorization'] =
-                    refreshResponse.data['accessToken'];
+                    _authService.getAccessToken();
 
                 // unlock dio
                 _dio.unlock();
                 _dio.interceptors.responseLock.unlock();
                 _dio.interceptors.errorLock.unlock();
 
-                // repeat the request with a new options
+                // repeat the request with new options
                 return _dio.request(options.path, options: options);
               } on DioError catch (err) {
                 switch (err.type) {
                   case DioErrorType.RESPONSE:
-                    _forceLogoutTimestamp =
-                        DateTime.now().millisecondsSinceEpoch;
-                    notifyListeners();
+                    _authService.forceLogout();
                     return null;
                   default:
                     return err;
                 }
               } catch (err) {
-                _forceLogoutTimestamp = DateTime.now().millisecondsSinceEpoch;
-                notifyListeners();
+                _authService.forceLogout();
                 return err;
               }
             }
@@ -123,63 +96,6 @@ class Api with ChangeNotifier {
         },
       ),
     );
-  }
-
-  int forceLogoutTimestamp() => _forceLogoutTimestamp;
-
-  setForceLogoutTimestamp(int timestamp) {
-    _forceLogoutTimestamp = timestamp;
-    notifyListeners();
-  }
-
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final response = await _dio.post(
-        "/auth/login",
-        data: {'email': email, 'password': password},
-      );
-      await _storeTokens(
-          accessToken: response.data['accessToken'],
-          refreshToken: response.data['refreshToken']);
-      accessToken = response.data['accessToken'];
-      return response.data;
-    } on DioError catch (e) {
-      if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
-      } else {
-        rethrow;
-      }
-    }
-  }
-
-  Future<Map<String, dynamic>> register({
-    @required String firstName,
-    @required String lastName,
-    @required String email,
-    @required String password,
-  }) async {
-    try {
-      final response = await _dio.post(
-        "/auth/register",
-        data: {
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'password': password,
-        },
-      );
-      await _storeTokens(
-          accessToken: response.data['accessToken'],
-          refreshToken: response.data['refreshToken']);
-      accessToken = response.data['accessToken'];
-      return response.data;
-    } on DioError catch (e) {
-      if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
-      } else {
-        rethrow;
-      }
-    }
   }
 
   Future<Account> fetchAccount() async {
@@ -483,12 +399,6 @@ class Api with ChangeNotifier {
         rethrow;
       }
     }
-  }
-
-  Future<void> _storeTokens(
-      {@required String accessToken, @required String refreshToken}) async {
-    await _storage.write(key: ACCESS_TOKEN_KEY, value: accessToken);
-    await _storage.write(key: REFRESH_TOKEN_KEY, value: refreshToken);
   }
 
   String _getErrorMessage(dynamic result) {

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/screens/group.dart';
+import 'package:sliceit/screens/home.dart';
+import 'package:sliceit/screens/loading.dart';
 import 'package:sliceit/screens/offline.dart';
+import 'package:sliceit/screens/welcome.dart';
 import 'package:tuple/tuple.dart';
-
-import './group.dart';
-import './home.dart';
-import './loading.dart';
-import './welcome.dart';
-import '../providers/auth.dart';
-import '../providers/base.dart';
-import '../providers/groups.dart';
 
 class Root extends StatelessWidget {
   static const routeName = '/';
@@ -17,20 +16,21 @@ class Root extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector2<Auth, GroupsProvider, Tuple4<Status, bool, Status, bool>>(
-      selector: (_, auth, groups) => Tuple4(
+    return Selector2<Auth, GroupsProvider, Tuple3<AuthStatus, Status, bool>>(
+      selector: (_, auth, groups) => Tuple3(
         auth.status,
-        auth.isAuthenticated,
         groups.status,
-        groups.hasGroups,
+        groups.isNotEmpty,
       ),
-      builder: (_, data, __) => data.item2
-          ? data.item3 == Status.REJECTED
+      builder: (_, data, __) => data.item1 == AuthStatus.AUTHENTICATED
+          ? data.item2 == Status.REJECTED
               ? OfflineScreen()
-              : data.item3 == Status.PENDING
+              : data.item2 == Status.PENDING
                   ? LoadingScreen()
-                  : data.item4 ? HomeScreen() : GroupScreen()
-          : data.item1 == Status.PENDING ? LoadingScreen() : WelcomeScreen(),
+                  : data.item3 ? HomeScreen() : GroupScreen()
+          : data.item1 == AuthStatus.RESTORING_TOKENS
+              ? LoadingScreen()
+              : WelcomeScreen(),
     );
   }
 }

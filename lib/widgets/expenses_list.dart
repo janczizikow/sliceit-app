@@ -35,10 +35,12 @@ class _ExpensesListState extends State<ExpensesList> {
       final List<Expense> expenses =
           await Provider.of<ExpensesProvider>(context, listen: false)
               .fetchExpensesPage(groupId, 1);
-      setState(() {
-        _page = 2;
-        _allFetched = expenses.isEmpty;
-      });
+      if (mounted) {
+        setState(() {
+          _page = 2;
+          _allFetched = expenses.isEmpty;
+        });
+      }
     }
   }
 
@@ -49,10 +51,12 @@ class _ExpensesListState extends State<ExpensesList> {
       final List<Expense> expenses =
           await Provider.of<ExpensesProvider>(context, listen: false)
               .fetchExpensesPage(groupId, _page);
-      setState(() {
-        _page += 1;
-        _allFetched = expenses.isEmpty;
-      });
+      if (mounted) {
+        setState(() {
+          _page += 1;
+          _allFetched = expenses.isEmpty;
+        });
+      }
     }
   }
 

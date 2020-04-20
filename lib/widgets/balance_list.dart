@@ -155,7 +155,7 @@ class BalanceList extends StatelessWidget {
       builder: (_, data, __) => RefreshIndicator(
         onRefresh: () => _fetchGroup(context, data.item1),
         child: ListView.builder(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: data.item2.length + 1,
           itemBuilder: (_, i) {
             final ThemeData theme = Theme.of(context);
@@ -210,16 +210,9 @@ class BalanceList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<GroupsProvider, Tuple3<String, List<Member>, String>>(
-      selector: (_, groups) => Tuple3(
-        groups.selectedGroupId,
-        groups.selectedGroupMembers,
-        groups.selectedGroup.currency,
-      ),
-      builder: (_, data, __) => PlatformWidget(
-        ios: _buildIos,
-        android: _buildAndroid,
-      ),
+    return PlatformWidget(
+      ios: _buildIos,
+      android: _buildAndroid,
     );
   }
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
-
-import './member.dart';
+import 'package:sliceit/models/member.dart';
 
 class Group {
   final String id;

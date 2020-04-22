@@ -1,10 +1,12 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
-
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sliceit/models/tokens.dart';
+import 'package:sliceit/services/navigation_service.dart';
 import 'package:sliceit/utils/config.dart';
+import 'package:sliceit/utils/error_message_formatter.dart';
 
 enum AuthStatus {
   UNINITIALIZED,
@@ -14,11 +16,23 @@ enum AuthStatus {
   AUTHENTICATED,
 }
 
-class Auth extends ChangeNotifier {
+class AuthError extends Error {
+  final String message;
+
+  AuthError(this.message);
+
+  @override
+  String toString() => 'AuthError:${this.message}';
+}
+
+class Auth with ChangeNotifier, ErrorMessageFormatter {
   static const ACCESS_TOKEN_KEY = 'ACCESS_TOKEN';
   static const REFRESH_TOKEN_KEY = 'REFRESH_TOKEN';
   final FlutterSecureStorage _storage = FlutterSecureStorage();
   final Dio _dio = new Dio(dioBaseOptions)..transformer = FlutterTransformer();
+  final NavigationService _navigationService;
+
+  Auth(this._navigationService);
 
   AuthStatus _status = AuthStatus.UNAUTHENTICATED;
   String _accessToken;
@@ -64,13 +78,18 @@ class Auth extends ChangeNotifier {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       );
+      _navigationService.replace('/');
       _storeTokens(
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       );
-    } catch (err) {
+    } on DioError catch (e) {
       _setStatus(AuthStatus.UNAUTHENTICATED);
-      rethrow;
+      if (e.response != null) {
+        throw AuthError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
     }
   }
 
@@ -96,19 +115,25 @@ class Auth extends ChangeNotifier {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       );
+      _navigationService.replace('/');
       _storeTokens(
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       );
-    } catch (err) {
+    } on DioError catch (e) {
       _setStatus(AuthStatus.UNAUTHENTICATED);
-      rethrow;
+      if (e.response != null) {
+        throw AuthError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
     }
   }
 
   Future<void> logout() async {
     await _storage.deleteAll();
     _setTokens(accessToken: null, refreshToken: null);
+    _navigationService.reset();
   }
 
   Future<void> forceLogout() async {

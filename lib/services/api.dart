@@ -9,6 +9,7 @@ import 'package:sliceit/models/group.dart';
 import 'package:sliceit/models/invite.dart';
 import 'package:sliceit/providers/auth.dart';
 import 'package:sliceit/utils/config.dart';
+import 'package:sliceit/utils/error_message_formatter.dart';
 
 class ApiError extends Error {
   final String message;
@@ -19,7 +20,7 @@ class ApiError extends Error {
   String toString() => 'ApiError:${this.message}';
 }
 
-class Api {
+class Api with ErrorMessageFormatter {
   final Dio _dio = new Dio(dioBaseOptions)..transformer = FlutterTransformer();
   Auth _authService;
 
@@ -104,7 +105,7 @@ class Api {
       return Account.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -125,7 +126,7 @@ class Api {
       return Account.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -149,7 +150,7 @@ class Api {
       return true;
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -162,7 +163,7 @@ class Api {
       return true;
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -178,7 +179,7 @@ class Api {
       return true;
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -200,7 +201,7 @@ class Api {
       }
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -213,7 +214,7 @@ class Api {
       return Group.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -232,7 +233,7 @@ class Api {
       return Group.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -251,7 +252,7 @@ class Api {
       return Group.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -266,7 +267,7 @@ class Api {
       return true;
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -288,7 +289,7 @@ class Api {
       }
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -305,7 +306,7 @@ class Api {
       return Invite.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -320,7 +321,7 @@ class Api {
       return true;
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -340,7 +341,7 @@ class Api {
           .toList();
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -368,7 +369,7 @@ class Api {
       return Expense.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
@@ -394,14 +395,10 @@ class Api {
       return Expense.fromJson(response.data);
     } on DioError catch (e) {
       if (e.response != null) {
-        throw ApiError(_getErrorMessage(e.response.data));
+        throw ApiError(getErrorMessage(e.response.data));
       } else {
         rethrow;
       }
     }
-  }
-
-  String _getErrorMessage(dynamic result) {
-    return (result['errors'] as List).map((error) => error['msg']).join(', ');
   }
 }

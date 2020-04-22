@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/auth.dart';
-import 'package:sliceit/services/api.dart';
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = '/register';
@@ -45,11 +44,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: <Widget>[
           PlatformDialogAction(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           )
         ],
@@ -78,8 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: email,
         password: password,
       );
-      Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-    } on ApiError catch (err) {
+    } on AuthError catch (err) {
       _showErrorMessage(err.message);
     } catch (err) {
       _showErrorMessage('Failed to register');
@@ -172,8 +170,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     colorBrightness: Brightness.dark,
                   ),
                   child: status == AuthStatus.AUTHENTICATING
-                      ? Text('Loading...')
-                      : Text('Register'),
+                      ? const Text('Loading...')
+                      : const Text('Register'),
                   onPressed:
                       status == AuthStatus.AUTHENTICATING ? null : _register,
                 ),

@@ -214,8 +214,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (result) {
       await Provider.of<Auth>(context, listen: false).logout();
-      _reset();
-      Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
     }
   }
 

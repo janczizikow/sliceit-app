@@ -1,6 +1,6 @@
-import './base.dart';
-import '../models/account.dart';
-import '../services/api.dart';
+import 'package:sliceit/models/account.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/services/api.dart';
 
 class AccountProvider extends BaseProvider {
   final Api _api;

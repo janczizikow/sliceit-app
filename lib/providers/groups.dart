@@ -1,9 +1,8 @@
-import './base.dart';
-
-import '../models/group.dart';
-import '../models/account.dart';
-import '../models/member.dart';
-import '../services/api.dart';
+import 'package:sliceit/models/account.dart';
+import 'package:sliceit/models/group.dart';
+import 'package:sliceit/models/member.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/services/api.dart';
 
 class GroupsProvider extends BaseProvider {
   final Api _api;

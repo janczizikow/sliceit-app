@@ -26,6 +26,7 @@ import 'package:sliceit/screens/register.dart';
 import 'package:sliceit/screens/root.dart';
 import 'package:sliceit/screens/settings.dart';
 import 'package:sliceit/services/api.dart';
+import 'package:sliceit/services/navigation_service.dart';
 import 'package:sliceit/widgets/no_animation_material_page_route.dart';
 import 'package:tuple/tuple.dart';
 
@@ -71,11 +72,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final navigatorKey = GlobalKey<NavigatorState>();
-  final Auth _auth = Auth();
+  static final NavigationService _navigationService = NavigationService();
+  static final Auth _auth = Auth(_navigationService);
 
   Future<void> _showForceLogoutDialog() async {
-    final context = navigatorKey.currentState.overlay.context;
+    final context =
+        _navigationService.navigationKey.currentState.overlay.context;
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
     Provider.of<Auth>(context, listen: false).forceLogoutTimestamp = null;
     await showPlatformDialog(
@@ -242,7 +244,7 @@ class _MyAppState extends State<MyApp> {
               return PlatformApp(
                 title: 'Sliceit',
                 initialRoute: Root.routeName,
-                navigatorKey: navigatorKey,
+                navigatorKey: _navigationService.navigationKey,
                 ios: (_) => CupertinoAppData(
                   theme: CupertinoThemeData(
                     brightness: data.item1.brightness,

@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -68,8 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await Provider.of<Auth>(context, listen: false)
           .login(email: email, password: password);
-      Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-    } on DioError catch (err) {
+    } on AuthError catch (err) {
       _showErrorMessage(err.message);
     } catch (err) {
       _showErrorMessage('Failed to authenticate');

@@ -92,7 +92,9 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
                 android: (_) => MaterialRaisedButtonData(
                   colorBrightness: Brightness.dark,
                 ),
-                child: _isLoading ? Text('Loading...') : Text('Reset password'),
+                child: _isLoading
+                    ? const Text('Loading...')
+                    : const Text('Reset password'),
                 onPressed: _isLoading ? null : _resetPassword,
               ),
             ],

@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
-
-import './base.dart';
-import '../models/invite.dart';
-import '../services/api.dart';
+import 'package:sliceit/models/invite.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/services/api.dart';
 
 class InvitesProvider extends BaseProvider {
   final Map<String, List<Invite>> _invitesByGroupId = {};

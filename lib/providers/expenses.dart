@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
-
-import './base.dart';
-import '../models/expense.dart';
-import '../services/api.dart';
+import 'package:sliceit/models/expense.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/services/api.dart';
 
 class ExpensesProvider extends BaseProvider {
   final Api _api;

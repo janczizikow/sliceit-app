@@ -227,25 +227,26 @@ class _GroupInvitesScreenState extends State<GroupInvitesScreen> {
                           },
                         ),
                       ),
-                      SizedBox(height: 1, width: 6),
+                      const SizedBox(height: 1, width: 6),
                       FittedBox(
                         fit: BoxFit.contain,
                         child: Container(
-                          padding: EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(2),
                           child: GestureDetector(
                             onTap: invites.isFetching ? null : _addInvite,
                             child: Container(
-                              padding: EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).primaryColor,
                                 borderRadius: BorderRadius.circular(200),
                               ),
                               child: PlatformWidget(
-                                  ios: (_) => const Icon(
-                                        CupertinoIcons.up_arrow,
-                                        color: Colors.white,
-                                      ),
-                                  android: (_) => const Icon(Icons.send)),
+                                ios: (_) => const Icon(
+                                  CupertinoIcons.up_arrow,
+                                  color: Colors.white,
+                                ),
+                                android: (_) => const Icon(Icons.send),
+                              ),
                             ),
                           ),
                         ),

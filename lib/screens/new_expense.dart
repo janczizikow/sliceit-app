@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:tuple/tuple.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import 'package:sliceit/services/api.dart';
-import 'package:sliceit/models/member.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sliceit/models/group.dart';
+import 'package:sliceit/models/member.dart';
 import 'package:sliceit/providers/account.dart';
-import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/providers/expenses.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/services/api.dart';
 import 'package:sliceit/widgets/avatar.dart';
 import 'package:sliceit/widgets/card_input.dart';
 import 'package:sliceit/widgets/card_picker.dart';
+import 'package:tuple/tuple.dart';
 
 class NewExpenseScreen extends StatefulWidget {
   static const routeName = '/new-expense';
@@ -139,7 +138,12 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
           payerId: _payer.userId,
           name: _nameController.text,
           shares: participantsIds.map((id) {
-            return {'userId': id, 'amount': total / participantsIds.length};
+            return {
+              'userId': id,
+              'amount': _payer.userId == id
+                  ? (total / participantsIds.length).ceil()
+                  : (total / participantsIds.length).floor()
+            };
           }).toList(),
           amount: total,
           date: _date.toIso8601String(),

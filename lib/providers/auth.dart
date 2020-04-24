@@ -78,7 +78,7 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       );
-      _navigationService.replace('/');
+      _navigationService.reset();
       _storeTokens(
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -115,7 +115,7 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       );
-      _navigationService.replace('/');
+      _navigationService.reset();
       _storeTokens(
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,

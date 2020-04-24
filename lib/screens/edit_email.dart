@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
-
-import '../providers/account.dart';
-import '../services/api.dart';
+import 'package:sliceit/providers/account.dart';
+import 'package:sliceit/services/api.dart';
+import 'package:sliceit/widgets/dialog.dart';
 
 class EditEmailScreen extends StatefulWidget {
   static const routeName = '/edit-email';
@@ -38,22 +38,6 @@ class _EditEmailState extends State<EditEmailScreen> {
     super.dispose();
   }
 
-  void _showErrorMessage(String message) async {
-    showPlatformDialog(
-      context: context,
-      builder: (_) => PlatformAlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: <Widget>[
-          PlatformDialogAction(
-            child: Text('OK'),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          )
-        ],
-      ),
-    );
-  }
-
   void _editName() async {
     setState(() => {_isLoading = true});
     // TODO: validaton
@@ -65,10 +49,12 @@ class _EditEmailState extends State<EditEmailScreen> {
       );
       Navigator.of(context).pop();
     } on ApiError catch (err) {
-      _showErrorMessage(err.message);
+      showErrorDialog(context, err.message);
     } catch (err) {
-      _showErrorMessage(
-          'Failed to update, please check your internet connection and try again.');
+      showErrorDialog(
+        context,
+        'Failed to update, please check your internet connection and try again.',
+      );
     } finally {
       setState(() => {_isLoading = false});
     }

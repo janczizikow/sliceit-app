@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import 'package:sliceit/services/api.dart';
-import 'package:sliceit/models/member.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sliceit/models/group.dart';
+import 'package:sliceit/models/member.dart';
 import 'package:sliceit/providers/account.dart';
-import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/providers/expenses.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/services/api.dart';
+import 'package:sliceit/utils/money_text_input_formater.dart';
 import 'package:sliceit/widgets/card_input.dart';
 import 'package:sliceit/widgets/card_picker.dart';
 
@@ -59,11 +59,11 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
     showPlatformDialog(
       context: context,
       builder: (_) => PlatformAlertDialog(
-        title: Text('Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: <Widget>[
           PlatformDialogAction(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           )
         ],
@@ -147,7 +147,7 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
             .createPayment(
           groupId: group.id,
           currency: group.currency,
-          amount: (double.parse(_amountController.text) * 100).floor(),
+          amount: (double.parse(_amountController.text) * 100).toInt(),
           from: _from.userId,
           to: _to.userId,
           date: _date.toIso8601String(),
@@ -190,9 +190,7 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
                   prefixText: 'Amount',
                   hintText: '0.00',
                   inputFormatters: [
-                    // TODO: Allow allow only 2 decimal places
-                    WhitelistingTextInputFormatter(RegExp('[0-9.]')),
-                    BlacklistingTextInputFormatter(RegExp('\s')),
+                    MoneyTextInputFormatter(),
                   ],
                 ),
                 const SizedBox(height: 16),

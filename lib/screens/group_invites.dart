@@ -2,10 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
-
-import '../providers/groups.dart';
-import '../providers/invites.dart';
-import '../services/api.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/providers/invites.dart';
+import 'package:sliceit/services/api.dart';
 
 class GroupInvitesScreen extends StatefulWidget {
   static const routeName = '/invites';

@@ -9,6 +9,7 @@ import 'package:sliceit/providers/account.dart';
 import 'package:sliceit/providers/expenses.dart';
 import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/services/api.dart';
+import 'package:sliceit/utils/money_text_input_formater.dart';
 import 'package:sliceit/widgets/avatar.dart';
 import 'package:sliceit/widgets/card_input.dart';
 import 'package:sliceit/widgets/card_picker.dart';
@@ -126,7 +127,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
         Provider.of<GroupsProvider>(context, listen: false).selectedGroup;
     if (group != null) {
       try {
-        final int total = (double.parse(_amountController.text) * 100).floor();
+        final int total = (double.parse(_amountController.text) * 100).toInt();
         List<String> participantsIds = _participants
             .where((participation) => participation.item2)
             .map((p) => p.item1.userId)
@@ -194,9 +195,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                   prefixText: 'Amount',
                   hintText: '0.00',
                   inputFormatters: [
-                    // TODO: Allow allow only 2 decimal places
-                    WhitelistingTextInputFormatter(RegExp('[0-9.]')),
-                    BlacklistingTextInputFormatter(RegExp('\s')),
+                    MoneyTextInputFormatter(),
                   ],
                 ),
                 const SizedBox(height: 16),

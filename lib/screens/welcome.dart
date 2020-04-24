@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import './login.dart';
-import './register.dart';
+import 'package:sliceit/screens/login.dart';
+import 'package:sliceit/screens/register.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override

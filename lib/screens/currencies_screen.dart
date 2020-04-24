@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import '../utils/currencies.dart';
+import 'package:sliceit/utils/currencies.dart';
 
 class CurrenciesScreen extends StatelessWidget {
   final List<Currency> currencies;

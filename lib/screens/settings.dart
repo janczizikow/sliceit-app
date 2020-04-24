@@ -6,6 +6,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/widgets/dialog.dart';
 import 'package:tuple/tuple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -252,21 +253,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } catch (err) {
         Navigator.pop(context);
-        showPlatformDialog(
-          context: context,
-          builder: (_) => PlatformAlertDialog(
-            title: const Text('Error'),
-            content: const Text(
-                'Failed to delete account. Please check your Internet connection and try again'),
-            actions: <Widget>[
-              PlatformDialogAction(
-                child: const Text('OK'),
-                onPressed: () =>
-                    Navigator.of(context, rootNavigator: true).pop(),
-              )
-            ],
-          ),
-        );
+        showErrorDialog(context,
+            'Failed to delete account. Please check your Internet connection and try again');
       }
     }
   }
@@ -276,19 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      showPlatformDialog(
-        context: context,
-        builder: (_) => PlatformAlertDialog(
-          title: const Text('Error'),
-          content: Text('Could not open $url'),
-          actions: <Widget>[
-            PlatformDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-            )
-          ],
-        ),
-      );
+      showErrorDialog(context, 'Could not open $url');
     }
   }
 

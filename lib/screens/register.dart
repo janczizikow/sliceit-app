@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/widgets/dialog.dart';
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = '/register';
@@ -40,22 +41,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _showErrorMessage(String message) async {
-    showPlatformDialog(
-      context: context,
-      builder: (_) => PlatformAlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: <Widget>[
-          PlatformDialogAction(
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          )
-        ],
-      ),
-    );
-  }
-
   void _handleSubmit() {
     FocusScopeNode currentFocus = FocusScope.of(context);
     if (!currentFocus.hasPrimaryFocus) {
@@ -78,9 +63,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: password,
       );
     } on AuthError catch (err) {
-      _showErrorMessage(err.message);
+      showErrorDialog(context, err.message);
     } catch (err) {
-      _showErrorMessage('Failed to register');
+      showErrorDialog(context, 'Failed to register');
     }
   }
 

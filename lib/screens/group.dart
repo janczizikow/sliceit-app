@@ -2,14 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/providers/account.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/screens/currencies_screen.dart';
+import 'package:sliceit/services/api.dart';
+import 'package:sliceit/utils/currencies.dart';
+import 'package:sliceit/widgets/dialog.dart';
+import 'package:sliceit/widgets/loading_dialog.dart';
 import 'package:tuple/tuple.dart';
-
-import './currencies_screen.dart';
-import '../providers/account.dart';
-import '../providers/groups.dart';
-import '../services/api.dart';
-import '../utils/currencies.dart';
-import '../widgets/loading_dialog.dart';
 
 class GroupScreen extends StatefulWidget {
   static const routeName = '/group';
@@ -50,22 +50,6 @@ class _GroupState extends State<GroupScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
-  }
-
-  void _showErrorMessage(String message) async {
-    showPlatformDialog(
-      context: context,
-      builder: (_) => PlatformAlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: <Widget>[
-          PlatformDialogAction(
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          )
-        ],
-      ),
-    );
   }
 
   Future<void> _onCurrencyPress() async {
@@ -147,7 +131,7 @@ class _GroupState extends State<GroupScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       }
     } on ApiError catch (err) {
-      _showErrorMessage(err.message);
+      showErrorDialog(context, err.message);
       setState(() => _isLoading = true);
     } catch (err) {
       setState(() => _isLoading = true);
@@ -186,10 +170,10 @@ class _GroupState extends State<GroupScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } on ApiError catch (e) {
         Navigator.of(context).pop();
-        _showErrorMessage(e.message);
+        showErrorDialog(context, e.message);
       } catch (e) {
         Navigator.of(context).pop();
-        _showErrorMessage('Failed to delete group');
+        showErrorDialog(context, 'Failed to delete group');
       }
     }
   }

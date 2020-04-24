@@ -4,6 +4,7 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/auth.dart';
 import 'package:sliceit/screens/forgot_password.dart';
+import 'package:sliceit/widgets/dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -32,22 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _showErrorMessage(String message) async {
-    showPlatformDialog(
-      context: context,
-      builder: (_) => PlatformAlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: <Widget>[
-          PlatformDialogAction(
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          )
-        ],
-      ),
-    );
-  }
-
   void _forgotPassword() {
     Navigator.of(context).pushNamed(ForgotPasswordScreen.routeName);
   }
@@ -68,9 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await Provider.of<Auth>(context, listen: false)
           .login(email: email, password: password);
     } on AuthError catch (err) {
-      _showErrorMessage(err.message);
+      showErrorDialog(context, err.message);
     } catch (err) {
-      _showErrorMessage('Failed to authenticate');
+      showErrorDialog(context, 'Failed to authenticate');
     }
   }
 

@@ -10,8 +10,10 @@ import 'package:sliceit/providers/expenses.dart';
 import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/services/api.dart';
 import 'package:sliceit/utils/money_text_input_formater.dart';
+import 'package:sliceit/widgets/avatar.dart';
 import 'package:sliceit/widgets/card_input.dart';
 import 'package:sliceit/widgets/card_picker.dart';
+import 'package:sliceit/widgets/dialog.dart';
 
 class NewPaymentScreen extends StatefulWidget {
   static const routeName = '/new-payment';
@@ -29,6 +31,7 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
   Member _from;
   Member _to;
   DateTime _date = new DateTime.now();
+  String _errorMessage;
 
   @override
   void initState() {
@@ -55,31 +58,20 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
     super.dispose();
   }
 
-  void _showErrorMessage(String message) async {
-    showPlatformDialog(
-      context: context,
-      builder: (_) => PlatformAlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: <Widget>[
-          PlatformDialogAction(
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          )
-        ],
-      ),
-    );
-  }
-
   Future<Member> _pickMember(List<Member> members) async {
     Member member = await showDialog<Member>(
         context: context,
         builder: (_) {
           return SimpleDialog(
+            title: const Text('Choose Member'),
             children: members.map((member) {
-              return SimpleDialogOption(
-                child: Text(member.fullName),
-                onPressed: () {
+              return ListTile(
+                leading: Avatar(
+                  initals: member.initials,
+                  avatar: member.avatar,
+                ),
+                title: Text(member.fullName),
+                onTap: () {
                   Navigator.of(context).pop(member);
                 },
               );
@@ -138,10 +130,43 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
     }
   }
 
+  bool _validate() {
+    bool isValid = true;
+
+    if (_from == null) {
+      _errorMessage = 'You must select payer';
+      isValid = false;
+    }
+
+    if (_to == null) {
+      _errorMessage = 'You must select who received the payment';
+      isValid = false;
+    }
+
+    if (_from.userId == _to.userId) {
+      _errorMessage =
+          'Payer and receiver are the same person! Select two different persons.';
+      isValid = false;
+    }
+
+    if (_amountController.text.isEmpty) {
+      _errorMessage = 'You must enter the amount';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
   Future<void> _handleAddPayment() async {
     Group group =
         Provider.of<GroupsProvider>(context, listen: false).selectedGroup;
-    if (group != null) {
+    assert(group != null);
+
+    final bool isValid = _validate();
+
+    if (!isValid) {
+      showErrorDialog(context, _errorMessage);
+    } else {
       try {
         await Provider.of<ExpensesProvider>(context, listen: false)
             .createPayment(
@@ -154,9 +179,9 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
         );
         Navigator.of(context).pop();
       } on ApiError catch (err) {
-        _showErrorMessage(err.message);
+        showErrorDialog(context, err.message);
       } catch (e) {
-        _showErrorMessage('Failed to add payment!');
+        showErrorDialog(context, 'Failed to add payment!');
       }
     }
   }
@@ -167,6 +192,7 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
       selector: (_, groups) => groups.selectedGroupMembers,
       builder: (_, members, __) => PlatformScaffold(
         appBar: PlatformAppBar(
+          title: const Text('New Payment'),
           trailingActions: <Widget>[
             PlatformButton(
               androidFlat: (_) => MaterialFlatButtonData(
@@ -199,6 +225,7 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
                   text: _from?.fullName ?? '',
                   onPressed: _pickFrom,
                 ),
+                const Divider(height: 1),
                 CardPicker(
                   prefix: 'To',
                   text: _to?.fullName ?? '',

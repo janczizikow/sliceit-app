@@ -56,7 +56,7 @@ class CardInput extends StatelessWidget {
           ),
           hintText: hintText,
           prefixStyle: Theme.of(context).textTheme.body1,
-          contentPadding: const EdgeInsets.all(16),
+          contentPadding: const EdgeInsets.only(left: 16, top: 16, bottom: 16),
           focusedBorder: InputBorder.none,
           enabledBorder: InputBorder.none,
         ),

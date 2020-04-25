@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:provider/provider.dart';
 
 import './group.dart';
-import './new_payment.dart';
 import './new_expense.dart';
+import './new_payment.dart';
 import '../models/group.dart';
 import '../providers/account.dart';
 import '../providers/groups.dart';
@@ -14,8 +14,8 @@ import '../widgets/app_drawer.dart';
 import '../widgets/balance_list.dart';
 import '../widgets/expenses_list.dart';
 import '../widgets/speed_dial_label.dart';
-import '../widgets/tab_bar_no_ripple.dart';
 import '../widgets/tab_bar_indicator.dart';
+import '../widgets/tab_bar_no_ripple.dart';
 
 enum MoreMenuOptions {
   settings,
@@ -160,44 +160,40 @@ class _AndroidHome extends StatelessWidget {
         ),
         body: TabBarView(children: _tabsViews),
         drawer: const AppDrawer(),
-        floatingActionButton: Selector<GroupsProvider, Group>(
-          selector: (_, groups) => groups.selectedGroup,
-          builder: (_, selectedGroup, __) => SpeedDial(
-            tooltip: 'Add Expense or Payment',
-            child: const Icon(Icons.add),
-            visible: true,
-            curve: Curves.decelerate,
-            overlayOpacity: theme.brightness == Brightness.dark ? 0.54 : 0.8,
-            overlayColor: theme.brightness == Brightness.dark
-                ? Colors.black
-                : Colors.white,
-            children: [
-              SpeedDialChild(
-                child: const Icon(Icons.shopping_basket),
-                onTap: () {
-                  Navigator.of(context).pushNamed(
-                    NewExpenseScreen.routeName,
-                  );
-                },
-                labelWidget: const SpeedDialLabel(
-                  title: 'New Expense',
-                  subTitle: 'A purchase made for the group',
-                ),
+        floatingActionButton: SpeedDial(
+          tooltip: 'Add Expense or Payment',
+          child: const Icon(Icons.add),
+          visible: true,
+          curve: Curves.decelerate,
+          overlayOpacity: theme.brightness == Brightness.dark ? 0.54 : 0.8,
+          overlayColor:
+              theme.brightness == Brightness.dark ? Colors.black : Colors.white,
+          children: [
+            SpeedDialChild(
+              child: const Icon(Icons.shopping_basket),
+              onTap: () {
+                Navigator.of(context).pushNamed(
+                  NewExpenseScreen.routeName,
+                );
+              },
+              labelWidget: const SpeedDialLabel(
+                title: 'New Expense',
+                subTitle: 'A purchase made for the group',
               ),
-              SpeedDialChild(
-                child: const Icon(Icons.account_balance_wallet),
-                onTap: () {
-                  Navigator.of(context).pushNamed(
-                    NewPaymentScreen.routeName,
-                  );
-                },
-                labelWidget: const SpeedDialLabel(
-                  title: 'New Payment',
-                  subTitle: 'Record a payment made in the group',
-                ),
+            ),
+            SpeedDialChild(
+              child: const Icon(Icons.account_balance_wallet),
+              onTap: () {
+                Navigator.of(context).pushNamed(
+                  NewPaymentScreen.routeName,
+                );
+              },
+              labelWidget: const SpeedDialLabel(
+                title: 'New Payment',
+                subTitle: 'Record a payment made in the group',
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

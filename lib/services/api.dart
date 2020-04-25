@@ -7,6 +7,7 @@ import 'package:sliceit/models/account.dart';
 import 'package:sliceit/models/expense.dart';
 import 'package:sliceit/models/group.dart';
 import 'package:sliceit/models/invite.dart';
+import 'package:sliceit/models/share.dart';
 import 'package:sliceit/providers/auth.dart';
 import 'package:sliceit/utils/config.dart';
 import 'package:sliceit/utils/error_message_formatter.dart';
@@ -353,7 +354,7 @@ class Api with ErrorMessageFormatter {
     @required String name,
     @required int amount,
     @required String payerId,
-    @required List<Map<String, Object>> shares,
+    @required List<Share> shares,
     @required String currency,
     @required String date,
   }) async {

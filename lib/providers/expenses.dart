@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:sliceit/models/expense.dart';
+import 'package:sliceit/models/share.dart';
 import 'package:sliceit/providers/base.dart';
 import 'package:sliceit/services/api.dart';
 
@@ -52,10 +53,11 @@ class ExpensesProvider extends BaseProvider {
     @required String name,
     @required int amount,
     @required String payerId,
-    @required List<Map<String, Object>> shares,
+    @required List<Share> shares,
     @required String currency,
     @required String date,
   }) async {
+    print(shares);
     status = Status.PENDING;
     try {
       final Expense expense = await _api.createExpense(

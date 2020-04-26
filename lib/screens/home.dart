@@ -7,7 +7,7 @@ import 'package:sliceit/models/group.dart';
 import 'package:sliceit/providers/account.dart';
 import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/screens/edit_group.dart';
-import 'package:sliceit/screens/new_expense.dart';
+import 'package:sliceit/screens/expense.dart';
 import 'package:sliceit/screens/payment.dart';
 import 'package:sliceit/widgets/app_drawer.dart';
 import 'package:sliceit/widgets/balance_list.dart';
@@ -172,7 +172,7 @@ class _AndroidHome extends StatelessWidget {
               child: const Icon(Icons.shopping_basket),
               onTap: () {
                 Navigator.of(context).pushNamed(
-                  NewExpenseScreen.routeName,
+                  ExpenseScreen.routeName,
                 );
               },
               labelWidget: const SpeedDialLabel(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/models/expense.dart';
 import 'package:sliceit/models/group.dart';
 import 'package:sliceit/models/member.dart';
 import 'package:sliceit/models/share.dart';
@@ -17,18 +18,26 @@ import 'package:sliceit/widgets/card_picker.dart';
 import 'package:sliceit/widgets/dialog.dart';
 import 'package:tuple/tuple.dart';
 
-class NewExpenseScreen extends StatefulWidget {
-  static const routeName = '/new-expense';
+class ExpenseScreenArguments {
+  final String expenseId;
 
-  const NewExpenseScreen({
+  ExpenseScreenArguments({this.expenseId});
+}
+
+class ExpenseScreen extends StatefulWidget {
+  static const routeName = '/new-expense';
+  final String expenseId;
+
+  const ExpenseScreen({
     Key key,
+    this.expenseId,
   }) : super(key: key);
 
   @override
-  _NewExpenseScreenState createState() => _NewExpenseScreenState();
+  _ExpenseScreenState createState() => _ExpenseScreenState();
 }
 
-class _NewExpenseScreenState extends State<NewExpenseScreen> {
+class _ExpenseScreenState extends State<ExpenseScreen> {
   TextEditingController _nameController;
   TextEditingController _amountController;
   FocusNode _amountFocusNode;
@@ -36,6 +45,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
   Member _payer;
   DateTime _date = new DateTime.now();
   bool _equalSplit = true;
+  bool _isInEditingMode = true;
   int _total = 0;
   String _errorMessage;
 
@@ -46,15 +56,49 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
     _amountController = new TextEditingController();
     _amountController.addListener(_handleAmountChanged);
     _amountFocusNode = new FocusNode();
-    final String userId =
-        Provider.of<AccountProvider>(context, listen: false).account?.id;
-    final List<Member> groupMembers =
-        Provider.of<GroupsProvider>(context, listen: false)
-            .selectedGroupMembers;
-    _payer = groupMembers.firstWhere((member) => member.userId == userId);
-    _participants = groupMembers.map((member) {
-      return Tuple3(member, 0, true);
-    }).toList();
+    final GroupsProvider groupsProvider =
+        Provider.of<GroupsProvider>(context, listen: false);
+    if (widget.expenseId == null) {
+      final String userId =
+          Provider.of<AccountProvider>(context, listen: false).account?.id;
+      final List<Member> groupMembers = groupsProvider.selectedGroupMembers;
+      _payer = groupMembers.firstWhere((member) => member.userId == userId);
+      _participants = groupMembers.map((member) {
+        return Tuple3(member, 0, true);
+      }).toList();
+    } else {
+      final Expense expense =
+          Provider.of<ExpensesProvider>(context, listen: false)
+              .byId(widget.expenseId);
+      _total = expense.amount;
+      String amountString = (expense.amount / 100).toString();
+      _nameController.value = _nameController.value.copyWith(
+        text: expense.name,
+        selection: TextSelection(
+          baseOffset: expense.name.length,
+          extentOffset: expense.name.length,
+        ),
+        composing: TextRange.empty,
+      );
+      _amountController.value = _amountController.value.copyWith(
+        text: amountString,
+        selection: TextSelection(
+          baseOffset: amountString.length,
+          extentOffset: amountString.length,
+        ),
+        composing: TextRange.empty,
+      );
+      _payer = groupsProvider.selectedGroupMembers
+          .firstWhere((member) => member.userId == expense.payerId);
+      // TODO: Refactor nested loop
+      _participants = expense.shares.map((share) {
+        Member member = groupsProvider.selectedGroupMembers
+            .firstWhere((member) => member.userId == share.userId);
+        return Tuple3(member, share.amount, true);
+      }).toList();
+      _date = expense.date;
+      _isInEditingMode = false;
+    }
   }
 
   @override
@@ -321,6 +365,43 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
     }
   }
 
+  Future<void> _handleDeleteExpense() async {
+    bool result = await showPlatformDialog(
+      context: context,
+      builder: (_) => PlatformAlertDialog(
+        title: const Text('Delete expense'),
+        content: const Text(
+            'This will completely remove this expense for ALL people involved, not just you.'),
+        actions: <Widget>[
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: PlatformText('Cancel'),
+          ),
+          PlatformDialogAction(
+            child: PlatformText('Delete'),
+            onPressed: () => Navigator.of(context).pop(true),
+            ios: (_) => CupertinoDialogActionData(isDestructiveAction: true),
+          ),
+        ],
+      ),
+    );
+
+    if (result) {
+      showLoadingDialog(context);
+      try {
+        await Provider.of<ExpensesProvider>(context, listen: false)
+            .deleteExpense(widget.expenseId);
+        Navigator.of(context).popUntil(ModalRoute.withName('/'));
+      } on ApiError catch (e) {
+        Navigator.of(context).pop();
+        showErrorDialog(context, e.message);
+      } catch (e) {
+        Navigator.of(context).pop();
+        showErrorDialog(context, 'Failed to delete expense');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print('build');
@@ -337,16 +418,18 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
     });
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: const Text('New Expense'),
-        trailingActions: <Widget>[
-          PlatformButton(
-            androidFlat: (_) => MaterialFlatButtonData(
-              textColor: Colors.white,
-            ),
-            child: PlatformText('Save'),
-            onPressed: _handleAddExpense,
-          ),
-        ],
+        title: Text(widget.expenseId == null ? 'New Expense' : 'Expense'),
+        trailingActions: widget.expenseId == null
+            ? <Widget>[
+                PlatformButton(
+                  androidFlat: (_) => MaterialFlatButtonData(
+                    textColor: Colors.white,
+                  ),
+                  child: PlatformText('Save'),
+                  onPressed: _handleAddExpense,
+                ),
+              ]
+            : [],
       ),
       body: SafeArea(
         child: Column(
@@ -362,6 +445,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                       controller: _nameController,
                       prefixText: 'Title',
                       hintText: 'Enter title',
+                      enabled: _isInEditingMode,
                       onSubmitted: (_) {
                         if (_total == 0) {
                           FocusScope.of(context).requestFocus(_amountFocusNode);
@@ -376,6 +460,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                           TextInputType.numberWithOptions(decimal: true),
                       prefixText: 'Amount',
                       hintText: '0.00',
+                      enabled: _isInEditingMode,
                       inputFormatters: [
                         MoneyTextInputFormatter(),
                       ],
@@ -384,19 +469,20 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                     CardPicker(
                       prefix: 'Date',
                       text: DateFormat.yMMMd().format(_date),
-                      onPressed: _pickDate,
+                      onPressed: _isInEditingMode ? _pickDate : null,
                     ),
                     const SizedBox(height: 16),
                     CardPicker(
                       prefix: 'Paid by',
                       text: _payer?.fullName ?? '',
-                      onPressed: _pickPayer,
+                      onPressed: _isInEditingMode ? _pickPayer : null,
                     ),
-                    SwitchListTile(
-                      title: const Text('Split equally'),
-                      value: _equalSplit,
-                      onChanged: _toggleEqualSplit,
-                    ),
+                    if (_isInEditingMode)
+                      SwitchListTile(
+                        title: const Text('Split equally'),
+                        value: _equalSplit,
+                        onChanged: _toggleEqualSplit,
+                      ),
                     ListTile(title: const Text('Participants')),
                     ..._participants
                         .asMap()
@@ -444,11 +530,11 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                                         ),
                                 ],
                               ),
-                              onTap: _equalSplit
+                              onTap: (_equalSplit && _isInEditingMode)
                                   ? () => _toggleParticipantActive(
                                       i, !participant.item3)
                                   : null,
-                              trailing: _equalSplit
+                              trailing: (_equalSplit && _isInEditingMode)
                                   ? Checkbox(
                                       value: participant.item3,
                                       onChanged: (bool value) =>
@@ -464,6 +550,19 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
                         .values
                         .toList(),
                     const SizedBox(height: 16),
+                    if (widget.expenseId != null)
+                      PlatformButton(
+                        androidFlat: (_) => MaterialFlatButtonData(
+                          colorBrightness: Brightness.dark,
+                        ),
+                        child: Text(
+                          'Delete Expense',
+                          style: TextStyle(
+                            color: Theme.of(context).errorColor,
+                          ),
+                        ),
+                        onPressed: _handleDeleteExpense,
+                      ),
                   ],
                 ),
               ),

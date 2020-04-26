@@ -17,10 +17,10 @@ import 'package:sliceit/providers/theme.dart';
 import 'package:sliceit/screens/edit_email.dart';
 import 'package:sliceit/screens/edit_group.dart';
 import 'package:sliceit/screens/edit_name.dart';
+import 'package:sliceit/screens/expense.dart';
 import 'package:sliceit/screens/forgot_password.dart';
 import 'package:sliceit/screens/group_invites.dart';
 import 'package:sliceit/screens/login.dart';
-import 'package:sliceit/screens/new_expense.dart';
 import 'package:sliceit/screens/payment.dart';
 import 'package:sliceit/screens/register.dart';
 import 'package:sliceit/screens/root.dart';
@@ -154,11 +154,13 @@ class _MyAppState extends State<MyApp> {
               PaymentScreen(expenseId: args?.expenseId ?? null),
           fullscreenDialog: args?.expenseId == null ?? true,
         );
-      case NewExpenseScreen.routeName:
+      case ExpenseScreen.routeName:
+        final ExpenseScreenArguments args = settings.arguments;
         return platformPageRoute(
           context: context,
-          builder: (context) => NewExpenseScreen(),
-          fullscreenDialog: true,
+          builder: (context) =>
+              ExpenseScreen(expenseId: args?.expenseId ?? null),
+          fullscreenDialog: args?.expenseId == null ?? true,
         );
       case SettingsScreen.routeName:
         return platformPageRoute(

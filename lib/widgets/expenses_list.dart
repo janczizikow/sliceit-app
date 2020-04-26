@@ -6,6 +6,7 @@ import 'package:sliceit/models/expense.dart';
 import 'package:sliceit/providers/base.dart';
 import 'package:sliceit/providers/expenses.dart';
 import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/screens/expense.dart';
 import 'package:sliceit/screens/payment.dart';
 import 'package:sliceit/utils/currencies.dart';
 import 'package:sliceit/widgets/empty_expenses.dart';
@@ -120,7 +121,14 @@ class _ExpensesListState extends State<ExpensesList> {
                                       expenseId: expense.id,
                                     ),
                                   );
-                                } else {}
+                                } else {
+                                  Navigator.of(context).pushNamed(
+                                    ExpenseScreen.routeName,
+                                    arguments: ExpenseScreenArguments(
+                                      expenseId: expense.id,
+                                    ),
+                                  );
+                                }
                               },
                               leading: CircleAvatar(
                                 child: Icon(

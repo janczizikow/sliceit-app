@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/auth.dart';
+import 'package:sliceit/utils/constants.dart';
+import 'package:sliceit/widgets/cupertino_sized_box.dart';
 import 'package:sliceit/widgets/dialog.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   FocusNode _lastNameFocusNode;
   FocusNode _emailFocusNode;
   FocusNode _passwordFocusNode;
+  String _errorMessage;
 
   @override
   void initState() {
@@ -49,23 +52,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _register();
   }
 
+  bool _validate({
+    @required String firstName,
+    @required String lastName,
+    @required String email,
+    @required String password,
+  }) {
+    bool isValid = true;
+
+    if (password.length < 8) {
+      _errorMessage = 'Password must be at least 8 characters long';
+      isValid = false;
+    }
+
+    if (EMAIL_REGEX.hasMatch(email)) {
+      return isValid;
+    } else {
+      isValid = false;
+      _errorMessage = 'Invalid email address';
+    }
+
+    if (lastName.isEmpty) {
+      isValid = false;
+      _errorMessage = 'Last name cannot be empty';
+    }
+
+    if (firstName.isEmpty) {
+      isValid = false;
+      _errorMessage = 'First name cannot be empty';
+    }
+
+    return isValid;
+  }
+
   void _register() async {
-    // TODO: Validation
     String firstName = _firstNameController.text;
     String lastName = _lastNameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
-    try {
-      await Provider.of<Auth>(context, listen: false).register(
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        password: password,
-      );
-    } on AuthError catch (err) {
-      showErrorDialog(context, err.message);
-    } catch (err) {
-      showErrorDialog(context, 'Failed to register');
+
+    if (_validate(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: password,
+    )) {
+      try {
+        await Provider.of<Auth>(context, listen: false).register(
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          password: password,
+        );
+      } on AuthError catch (err) {
+        showErrorDialog(context, err.message);
+      } catch (err) {
+        showErrorDialog(context, 'Failed to register');
+      }
+    } else {
+      showErrorDialog(context, _errorMessage);
     }
   }
 
@@ -93,10 +138,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'First name',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(_lastNameFocusNode),
               ),
+              const CupertinoSizedBox(height: 8),
               PlatformTextField(
                 controller: _lastNameController,
                 focusNode: _lastNameFocusNode,
@@ -109,10 +159,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Last name',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(_emailFocusNode),
               ),
+              const CupertinoSizedBox(height: 8),
               PlatformTextField(
                 autocorrect: false,
                 controller: _emailController,
@@ -126,10 +181,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Email',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(_passwordFocusNode),
               ),
+              const CupertinoSizedBox(height: 8),
               PlatformTextField(
                 obscureText: true,
                 autocorrect: false,
@@ -143,6 +203,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Password',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) => _handleSubmit(),
               ),

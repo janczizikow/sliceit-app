@@ -3,19 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:provider/provider.dart';
-
-import './group.dart';
-import './new_expense.dart';
-import './new_payment.dart';
-import '../models/group.dart';
-import '../providers/account.dart';
-import '../providers/groups.dart';
-import '../widgets/app_drawer.dart';
-import '../widgets/balance_list.dart';
-import '../widgets/expenses_list.dart';
-import '../widgets/speed_dial_label.dart';
-import '../widgets/tab_bar_indicator.dart';
-import '../widgets/tab_bar_no_ripple.dart';
+import 'package:sliceit/models/group.dart';
+import 'package:sliceit/providers/account.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/screens/edit_group.dart';
+import 'package:sliceit/screens/new_expense.dart';
+import 'package:sliceit/screens/new_payment.dart';
+import 'package:sliceit/widgets/app_drawer.dart';
+import 'package:sliceit/widgets/balance_list.dart';
+import 'package:sliceit/widgets/expenses_list.dart';
+import 'package:sliceit/widgets/speed_dial_label.dart';
+import 'package:sliceit/widgets/tab_bar_indicator.dart';
+import 'package:sliceit/widgets/tab_bar_no_ripple.dart';
 
 enum MoreMenuOptions {
   settings,
@@ -123,7 +122,7 @@ class _AndroidHome extends StatelessWidget {
                   switch (result) {
                     case MoreMenuOptions.settings:
                       Navigator.of(context)
-                          .pushNamed(GroupScreen.routeName, arguments: {
+                          .pushNamed(EditGroupScreen.routeName, arguments: {
                         'groupId': selectedGroup.id,
                         'name': selectedGroup.name,
                         'currency': selectedGroup.currency,
@@ -137,12 +136,12 @@ class _AndroidHome extends StatelessWidget {
                     <PopupMenuEntry<MoreMenuOptions>>[
                   const PopupMenuItem<MoreMenuOptions>(
                     value: MoreMenuOptions.settings,
-                    child: Text('Group settings'),
+                    child: const Text('Group settings'),
                   ),
                   const PopupMenuItem<MoreMenuOptions>(
                     value: MoreMenuOptions.export,
                     enabled: false,
-                    child: Text('Export as spreadsheet'),
+                    child: const Text('Export as spreadsheet'),
                   ),
                 ],
               ),

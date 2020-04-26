@@ -1,11 +1,10 @@
 import 'package:app_review/app_review.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../providers/groups.dart';
-import '../providers/theme.dart';
-import '../screens/group.dart';
-import '../screens/settings.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/providers/theme.dart';
+import 'package:sliceit/screens/edit_group.dart';
+import 'package:sliceit/screens/settings.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({Key key}) : super(key: key);
@@ -48,7 +47,7 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   void _openNewGroup() {
-    Navigator.of(context).popAndPushNamed(GroupScreen.routeName);
+    Navigator.of(context).popAndPushNamed(EditGroupScreen.routeName);
   }
 
   void _openSettings() {

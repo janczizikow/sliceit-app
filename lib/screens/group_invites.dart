@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/providers/invites.dart';
 import 'package:sliceit/services/api.dart';
+import 'package:sliceit/utils/constants.dart';
 
 class GroupInvitesScreen extends StatefulWidget {
   static const routeName = '/invites';
@@ -40,24 +41,36 @@ class _GroupInvitesScreenState extends State<GroupInvitesScreen> {
         ).fetchGroupInvites(widget.groupId));
   }
 
+  bool _validate(String email) {
+    if (EMAIL_REGEX.hasMatch(email)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Future<void> _addInvite() async {
-//    TODO: validation
     final String email = _emailController.text;
-    try {
-      bool created = await Provider.of<InvitesProvider>(context, listen: false)
-          .createInvite(widget.groupId, email);
-      _emailController.clear();
-      if (!created) {
-        _showMessage('Success',
-            'This user already has an account and has been added to the group directly.');
-        // Refetch group to get new members
-        Provider.of<GroupsProvider>(context, listen: false)
-            .fetchGroup(widget.groupId);
+    if (_validate(email)) {
+      try {
+        bool created =
+            await Provider.of<InvitesProvider>(context, listen: false)
+                .createInvite(widget.groupId, email);
+        _emailController.clear();
+        if (!created) {
+          _showMessage('Success',
+              'This user already has an account and has been added to the group directly.');
+          // Refetch group to get new members
+          Provider.of<GroupsProvider>(context, listen: false)
+              .fetchGroup(widget.groupId);
+        }
+      } on ApiError catch (e) {
+        _showMessage('Error', e.message);
+      } catch (e) {
+        _showMessage('Error', 'Failed to create invite. Please try again');
       }
-    } on ApiError catch (e) {
-      _showMessage('Error', e.message);
-    } catch (e) {
-      _showMessage('Error', 'Failed to create invite. Please try again');
+    } else {
+      _showMessage('Error', 'Invalid email address');
     }
   }
 

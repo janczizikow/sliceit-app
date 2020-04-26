@@ -235,16 +235,6 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
   bool _validate() {
     bool isValid = true;
 
-    if (_total == 0) {
-      _errorMessage = 'You must enter the amount greater than 0';
-      isValid = false;
-    }
-
-    if (_nameController.text.isEmpty) {
-      _errorMessage = 'You must enter the title';
-      isValid = false;
-    }
-
     if (_equalSplit) {
       if (_participants.where((participant) => participant.item3).isEmpty) {
         _errorMessage = 'You must select at least one expense participant';
@@ -268,6 +258,16 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
         ).format(_total / 100)}';
         isValid = false;
       }
+    }
+
+    if (_total == 0) {
+      _errorMessage = 'You must enter the amount greater than 0';
+      isValid = false;
+    }
+
+    if (_nameController.text.isEmpty) {
+      _errorMessage = 'You must enter the title';
+      isValid = false;
     }
 
     return isValid;

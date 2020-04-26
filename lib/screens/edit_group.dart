@@ -11,17 +11,17 @@ import 'package:sliceit/widgets/dialog.dart';
 import 'package:sliceit/widgets/loading_dialog.dart';
 import 'package:tuple/tuple.dart';
 
-class GroupScreen extends StatefulWidget {
+class EditGroupScreen extends StatefulWidget {
   static const routeName = '/group';
   final Map<String, dynamic> arguments;
 
-  const GroupScreen({Key key, this.arguments}) : super(key: key);
+  const EditGroupScreen({Key key, this.arguments}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _GroupState();
+  State<StatefulWidget> createState() => _EditGroupState();
 }
 
-class _GroupState extends State<GroupScreen> {
+class _EditGroupState extends State<EditGroupScreen> {
   bool _isLoading = false;
   String _groupId;
   final _nameController = TextEditingController();
@@ -29,6 +29,7 @@ class _GroupState extends State<GroupScreen> {
       currencies.entries.map((entry) => Currency.fromMap(entry.value)).toList();
 
   String _currency = '';
+  String _errorMessage;
 
   @override
   void initState() {
@@ -92,49 +93,65 @@ class _GroupState extends State<GroupScreen> {
           color: CupertinoColors.label.resolveFrom(context),
           fontSize: 22,
         ),
-        child: GestureDetector(
-          // Blocks taps from propagating to the modal sheet and popping.
-          onTap: () {},
-          child: SafeArea(
-            top: false,
-            child: CupertinoPicker.builder(
-              itemExtent: 32.0,
-              backgroundColor:
-                  CupertinoColors.systemBackground.resolveFrom(context),
-              childCount: _currencies.length,
-              itemBuilder: (_, i) =>
-                  Text("${_currencies[i].code} - ${_currencies[i].name}"),
-              onSelectedItemChanged: (i) => {
-                setState(() {
-                  _currency = _currencies[i].code;
-                })
-              },
-            ),
+        child: SafeArea(
+          top: false,
+          child: CupertinoPicker.builder(
+            itemExtent: 32.0,
+            backgroundColor:
+                CupertinoColors.systemBackground.resolveFrom(context),
+            childCount: _currencies.length,
+            itemBuilder: (_, i) =>
+                Text("${_currencies[i].code} - ${_currencies[i].name}"),
+            onSelectedItemChanged: (i) => {
+              setState(() {
+                _currency = _currencies[i].code;
+              })
+            },
           ),
         ),
       ),
     );
   }
 
+  bool _validate(String name) {
+    bool isValid = true;
+
+    if (_currency.isEmpty) {
+      isValid = false;
+      _errorMessage = "You must select group currency";
+    }
+
+    if (name.isEmpty) {
+      isValid = false;
+      _errorMessage = "Group name cannot be empty";
+    }
+
+    return isValid;
+  }
+
   Future<void> _handleSubmit() async {
-    setState(() => _isLoading = true);
-    // TODO: validation
     String name = _nameController.text;
-    try {
-      if (_groupId != null) {
-        await Provider.of<GroupsProvider>(context, listen: false)
-            .updateGroup(groupId: _groupId, name: name, currency: _currency);
-        Navigator.of(context).pop();
-      } else {
-        await Provider.of<GroupsProvider>(context, listen: false)
-            .createGroup(name: name, currency: _currency);
-        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+
+    if (_validate(name)) {
+      setState(() => _isLoading = true);
+      try {
+        if (_groupId != null) {
+          await Provider.of<GroupsProvider>(context, listen: false)
+              .updateGroup(groupId: _groupId, name: name, currency: _currency);
+          Navigator.of(context).pop();
+        } else {
+          await Provider.of<GroupsProvider>(context, listen: false)
+              .createGroup(name: name, currency: _currency);
+          Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+        }
+      } on ApiError catch (err) {
+        showErrorDialog(context, err.message);
+        setState(() => _isLoading = true);
+      } catch (err) {
+        setState(() => _isLoading = true);
       }
-    } on ApiError catch (err) {
-      showErrorDialog(context, err.message);
-      setState(() => _isLoading = true);
-    } catch (err) {
-      setState(() => _isLoading = true);
+    } else {
+      showErrorDialog(context, _errorMessage);
     }
   }
 
@@ -202,6 +219,10 @@ class _GroupState extends State<GroupScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Name',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 controller: _nameController,
                 onSubmitted: (_) {
@@ -224,11 +245,14 @@ class _GroupState extends State<GroupScreen> {
                 ),
                 onPressed: _onCurrencyPress,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               PlatformButton(
                 color: Theme.of(context).primaryColor,
                 android: (_) =>
                     MaterialRaisedButtonData(colorBrightness: Brightness.dark),
+                ios: (_) => CupertinoButtonData(
+                  padding: EdgeInsets.zero,
+                ),
                 child: _isLoading
                     ? const Text('Loading...')
                     : Text(_groupId != null ? 'Save' : 'Next'),
@@ -245,10 +269,14 @@ class _GroupState extends State<GroupScreen> {
                     return data.item1 == data.item2
                         ? PlatformButton(
                             androidFlat: (_) => MaterialFlatButtonData(
-                              textColor: Theme.of(context).errorColor,
                               colorBrightness: Brightness.dark,
                             ),
-                            child: const Text('Delete group'),
+                            child: Text(
+                              'Delete group',
+                              style: TextStyle(
+                                color: Theme.of(context).errorColor,
+                              ),
+                            ),
                             onPressed: _deleteGroup,
                           )
                         // TODO: leave group button

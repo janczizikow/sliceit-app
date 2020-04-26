@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sliceit/providers/auth.dart';
 import 'package:sliceit/providers/base.dart';
 import 'package:sliceit/providers/groups.dart';
-import 'package:sliceit/screens/group.dart';
+import 'package:sliceit/screens/edit_group.dart';
 import 'package:sliceit/screens/home.dart';
 import 'package:sliceit/screens/loading.dart';
 import 'package:sliceit/screens/offline.dart';
@@ -27,7 +27,7 @@ class Root extends StatelessWidget {
               ? OfflineScreen()
               : data.item2 == Status.PENDING
                   ? LoadingScreen()
-                  : data.item3 ? HomeScreen() : GroupScreen()
+                  : data.item3 ? HomeScreen() : EditGroupScreen()
           : data.item1 == AuthStatus.RESTORING_TOKENS
               ? LoadingScreen()
               : WelcomeScreen(),

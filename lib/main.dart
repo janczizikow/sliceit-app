@@ -15,9 +15,9 @@ import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/providers/invites.dart';
 import 'package:sliceit/providers/theme.dart';
 import 'package:sliceit/screens/edit_email.dart';
+import 'package:sliceit/screens/edit_group.dart';
 import 'package:sliceit/screens/edit_name.dart';
 import 'package:sliceit/screens/forgot_password.dart';
-import 'package:sliceit/screens/group.dart';
 import 'package:sliceit/screens/group_invites.dart';
 import 'package:sliceit/screens/login.dart';
 import 'package:sliceit/screens/new_expense.dart';
@@ -129,10 +129,10 @@ class _MyAppState extends State<MyApp> {
           builder: (context) => ForgotPasswordScreen(),
           settings: settings,
         );
-      case GroupScreen.routeName:
+      case EditGroupScreen.routeName:
         return platformPageRoute(
           context: context,
-          builder: (context) => GroupScreen(
+          builder: (context) => EditGroupScreen(
             arguments: settings.arguments,
           ),
           settings: settings,

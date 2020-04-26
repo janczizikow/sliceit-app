@@ -1,9 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/auth.dart';
 import 'package:sliceit/screens/forgot_password.dart';
+import 'package:sliceit/utils/constants.dart';
+import 'package:sliceit/widgets/cupertino_sized_box.dart';
 import 'package:sliceit/widgets/dialog.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   FocusNode _passwordFocusNode;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String _errorMessage;
 
   @override
   void initState() {
@@ -45,17 +47,39 @@ class _LoginScreenState extends State<LoginScreen> {
     _authenticate();
   }
 
+  bool _validate(String email, String password) {
+    bool isValid = true;
+
+    if (password.length < 8) {
+      _errorMessage = 'Password must be at least 8 characters long';
+      isValid = false;
+    }
+
+    if (EMAIL_REGEX.hasMatch(email)) {
+      return isValid;
+    } else {
+      _errorMessage = 'Invalid email address';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
   Future<void> _authenticate() async {
-    // TODO: Validation
     String email = _emailController.text;
     String password = _passwordController.text;
-    try {
-      await Provider.of<Auth>(context, listen: false)
-          .login(email: email, password: password);
-    } on AuthError catch (err) {
-      showErrorDialog(context, err.message);
-    } catch (err) {
-      showErrorDialog(context, 'Failed to authenticate');
+
+    if (_validate(email, password)) {
+      try {
+        await Provider.of<Auth>(context, listen: false)
+            .login(email: email, password: password);
+      } on AuthError catch (err) {
+        showErrorDialog(context, err.message);
+      } catch (err) {
+        showErrorDialog(context, 'Failed to authenticate');
+      }
+    } else {
+      showErrorDialog(context, _errorMessage);
     }
   }
 
@@ -84,11 +108,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Email',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_passwordFocusNode);
                 },
               ),
+              const CupertinoSizedBox(height: 8),
               PlatformTextField(
                 obscureText: true,
                 autocorrect: false,
@@ -101,6 +130,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Password',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 focusNode: _passwordFocusNode,
                 onSubmitted: (_) => _handleSubmit(),
@@ -110,6 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 selector: (_, auth) => auth.status,
                 builder: (_, status, __) => PlatformButton(
                   color: Theme.of(context).primaryColor,
+                  ios: (_) => CupertinoButtonData(
+                    padding: EdgeInsets.zero,
+                  ),
                   android: (_) => MaterialRaisedButtonData(
                     colorBrightness: Brightness.dark,
                   ),

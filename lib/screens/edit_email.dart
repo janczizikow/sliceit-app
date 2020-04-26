@@ -4,6 +4,7 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/account.dart';
 import 'package:sliceit/services/api.dart';
+import 'package:sliceit/utils/constants.dart';
 import 'package:sliceit/widgets/dialog.dart';
 
 class EditEmailScreen extends StatefulWidget {
@@ -38,25 +39,37 @@ class _EditEmailState extends State<EditEmailScreen> {
     super.dispose();
   }
 
+  bool _validate(String email) {
+    if (EMAIL_REGEX.hasMatch(email)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   void _editName() async {
-    setState(() => {_isLoading = true});
-    // TODO: validaton
     final email = _emailController.text;
 
-    try {
-      await Provider.of<AccountProvider>(context, listen: false).updateAccount(
-        email: email,
-      );
-      Navigator.of(context).pop();
-    } on ApiError catch (err) {
-      showErrorDialog(context, err.message);
-    } catch (err) {
-      showErrorDialog(
-        context,
-        'Failed to update, please check your internet connection and try again.',
-      );
-    } finally {
-      setState(() => {_isLoading = false});
+    if (_validate(email)) {
+      try {
+        setState(() => {_isLoading = true});
+        await Provider.of<AccountProvider>(context, listen: false)
+            .updateAccount(
+          email: email,
+        );
+        Navigator.of(context).pop();
+      } on ApiError catch (err) {
+        showErrorDialog(context, err.message);
+      } catch (err) {
+        showErrorDialog(
+          context,
+          'Failed to update, please check your internet connection and try again.',
+        );
+      } finally {
+        setState(() => {_isLoading = false});
+      }
+    } else {
+      showErrorDialog(context, 'Invalid email address');
     }
   }
 
@@ -89,6 +102,10 @@ class _EditEmailState extends State<EditEmailScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Email',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) {
                   FocusScopeNode currentFocus = FocusScope.of(context);

@@ -4,6 +4,7 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/providers/account.dart';
 import 'package:sliceit/services/api.dart';
+import 'package:sliceit/widgets/cupertino_sized_box.dart';
 import 'package:sliceit/widgets/dialog.dart';
 
 class EditNameScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _EditNameState extends State<EditNameScreen> {
   FocusNode _lastNameFocusNode;
 
   var _isLoading = false;
+  String _errorMessage;
 
   @override
   void initState() {
@@ -54,27 +56,46 @@ class _EditNameState extends State<EditNameScreen> {
     super.dispose();
   }
 
+  bool _validate(String firstName, String lastName) {
+    bool isValid = true;
+    if (lastName.isEmpty) {
+      isValid = false;
+      _errorMessage = 'Last name cannot be empty';
+    }
+
+    if (firstName.isEmpty) {
+      isValid = false;
+      _errorMessage = 'First name cannot be empty';
+    }
+
+    return isValid;
+  }
+
   void _editName() async {
-    setState(() => {_isLoading = true});
-    // TODO: validaton
     final firstName = _firstNameController.text;
     final lastName = _lastNameController.text;
 
-    try {
-      await Provider.of<AccountProvider>(context, listen: false).updateAccount(
-        firstName: firstName,
-        lastName: lastName,
-      );
-      Navigator.of(context).pop();
-    } on ApiError catch (err) {
-      showErrorDialog(context, err.message);
-    } catch (err) {
-      showErrorDialog(
-        context,
-        'Failed to update, please check your internet connection and try again.',
-      );
-    } finally {
-      setState(() => {_isLoading = false});
+    if (_validate(firstName, lastName)) {
+      try {
+        setState(() => {_isLoading = true});
+        await Provider.of<AccountProvider>(context, listen: false)
+            .updateAccount(
+          firstName: firstName,
+          lastName: lastName,
+        );
+        Navigator.of(context).pop();
+      } on ApiError catch (err) {
+        showErrorDialog(context, err.message);
+      } catch (err) {
+        showErrorDialog(
+          context,
+          'Failed to update, please check your internet connection and try again.',
+        );
+      } finally {
+        setState(() => {_isLoading = false});
+      }
+    } else {
+      showErrorDialog(context, _errorMessage);
     }
   }
 
@@ -108,11 +129,16 @@ class _EditNameState extends State<EditNameScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'First name',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_lastNameFocusNode);
                 },
               ),
+              const CupertinoSizedBox(height: 8),
               PlatformTextField(
                 controller: _lastNameController,
                 focusNode: _lastNameFocusNode,
@@ -123,6 +149,10 @@ class _EditNameState extends State<EditNameScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Last name',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onSubmitted: (_) {
                   FocusScopeNode currentFocus = FocusScope.of(context);

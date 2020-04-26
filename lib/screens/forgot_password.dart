@@ -83,12 +83,19 @@ class _ForgotPasswordState extends State<ForgotPasswordScreen> {
                 ),
                 ios: (_) => CupertinoTextFieldData(
                   placeholder: 'Email',
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 onEditingComplete: _resetPassword,
               ),
               const SizedBox(height: 16),
               PlatformButton(
                 color: Theme.of(context).primaryColor,
+                ios: (_) => CupertinoButtonData(
+                  padding: EdgeInsets.zero,
+                ),
                 android: (_) => MaterialRaisedButtonData(
                   colorBrightness: Brightness.dark,
                 ),

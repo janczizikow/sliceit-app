@@ -1,17 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
 import 'package:intl/intl.dart';
-
-import '../providers/groups.dart';
-import '../models/group.dart';
-import '../screens/group.dart';
-import '../models/member.dart';
-import '../screens/group_invites.dart';
-import './avatar.dart';
-import '../utils/currencies.dart';
+import 'package:provider/provider.dart';
+import 'package:sliceit/models/group.dart';
+import 'package:sliceit/models/member.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/screens/edit_group.dart';
+import 'package:sliceit/screens/group_invites.dart';
+import 'package:sliceit/utils/currencies.dart';
+import 'package:sliceit/widgets//avatar.dart';
+import 'package:tuple/tuple.dart';
 
 class BalanceList extends StatelessWidget {
   Future<void> _fetchGroup(BuildContext context, String id) async {
@@ -57,7 +56,7 @@ class BalanceList extends StatelessWidget {
                     child: const Text('Edit'),
                     onPressed: () {
                       Navigator.of(context, rootNavigator: true)
-                          .pushNamed(GroupScreen.routeName, arguments: {
+                          .pushNamed(EditGroupScreen.routeName, arguments: {
                         'groupId': selectedGroup.id,
                         'name': selectedGroup.name,
                         'currency': selectedGroup.currency,

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:sliceit/models/member.dart';
+import 'package:sliceit/models/share.dart';
 
 class Group {
   final String id;
@@ -48,5 +49,22 @@ class Group {
 
   String memberFirstNameByUserId(String userId) {
     return members.firstWhere((member) => member.userId == userId).firstName;
+  }
+
+  Member memberByUserId(String userId) {
+    return members.firstWhere((member) => member.userId == userId);
+  }
+
+  void optimisticBalanceUpdate(int total, List<Share> shares, String payerId) {
+    int diff;
+    // TODO: REFACTOR nested loop
+    for (Share share in shares) {
+      if (share.userId == payerId) {
+        diff = total - share.amount;
+        memberByUserId(share.userId).balance += diff;
+      } else {
+        memberByUserId(share.userId).balance -= share.amount;
+      }
+    }
   }
 }

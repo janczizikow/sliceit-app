@@ -1,14 +1,21 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:sliceit/models/expense.dart';
 import 'package:sliceit/models/share.dart';
 import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/providers/groups.dart';
 import 'package:sliceit/services/api.dart';
 
 class ExpensesProvider extends BaseProvider {
   final Api _api;
   final Map<String, List<Expense>> _expensesByGroupId = {};
+  GroupsProvider _groupsProvider;
 
   ExpensesProvider(this._api);
+
+  set groupsProvider(GroupsProvider groupsProvider) {
+    _groupsProvider = groupsProvider;
+  }
 
   List<Expense> byGroupId(String groupId) {
     if (_expensesByGroupId.containsKey(groupId)) {
@@ -57,7 +64,7 @@ class ExpensesProvider extends BaseProvider {
     @required String currency,
     @required String date,
   }) async {
-    print(shares);
+    assert(_groupsProvider != null);
     status = Status.PENDING;
     try {
       final Expense expense = await _api.createExpense(
@@ -69,12 +76,16 @@ class ExpensesProvider extends BaseProvider {
         currency: currency,
         date: date,
       );
+
       if (_expensesByGroupId.containsKey(groupId)) {
         _expensesByGroupId[groupId].insert(0, expense);
       } else {
         _expensesByGroupId[groupId] = [expense];
       }
-      // TODO: Apply balance to the group!
+
+      _groupsProvider.selectedGroup
+          .optimisticBalanceUpdate(amount, shares, payerId);
+
       status = Status.RESOLVED;
     } catch (e) {
       status = Status.REJECTED;
@@ -90,6 +101,7 @@ class ExpensesProvider extends BaseProvider {
     @required String currency,
     @required String date,
   }) async {
+    assert(_groupsProvider != null);
     status = Status.PENDING;
     try {
       final Expense payment = await _api.createPayment(
@@ -100,12 +112,19 @@ class ExpensesProvider extends BaseProvider {
         currency: currency,
         date: date,
       );
+
       if (_expensesByGroupId.containsKey(groupId)) {
         _expensesByGroupId[groupId].insert(0, payment);
       } else {
         _expensesByGroupId[groupId] = [payment];
       }
-      // TODO: Apply balance to the group!
+
+      _groupsProvider.selectedGroup.optimisticBalanceUpdate(
+        amount,
+        [Share(userId: from, amount: 0), Share(userId: to, amount: amount)],
+        from,
+      );
+
       status = Status.RESOLVED;
     } catch (e) {
       status = Status.REJECTED;
@@ -113,7 +132,6 @@ class ExpensesProvider extends BaseProvider {
     }
   }
 
-//  TODO: reset
   void reset() {
     _expensesByGroupId.clear();
   }

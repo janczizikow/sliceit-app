@@ -198,18 +198,18 @@ class _MyAppState extends State<MyApp> {
       child: Consumer<Api>(
         builder: (_, api, __) => MultiProvider(
           providers: [
-            ChangeNotifierProxyProvider2<Api, Auth, AccountProvider>(
+            ChangeNotifierProxyProvider<Auth, AccountProvider>(
               create: (_) => AccountProvider(api),
-              update: (_, api, auth, account) {
+              update: (_, auth, account) {
                 if (auth.forceLogoutTimestamp != null) {
                   account.reset();
                 }
                 return account;
               },
             ),
-            ChangeNotifierProxyProvider2<Api, Auth, GroupsProvider>(
+            ChangeNotifierProxyProvider<Auth, GroupsProvider>(
                 create: (_) => GroupsProvider(api),
-                update: (_, api, auth, groups) {
+                update: (_, auth, groups) {
                   if (auth.forceLogoutTimestamp != null) {
                     groups.reset();
                   }
@@ -217,17 +217,25 @@ class _MyAppState extends State<MyApp> {
                       auth.status == AuthStatus.AUTHENTICATED;
                   return groups;
                 }),
-            ChangeNotifierProxyProvider2<Api, Auth, InvitesProvider>(
+            ChangeNotifierProxyProvider<Auth, InvitesProvider>(
               create: (_) => InvitesProvider(api),
-              update: (_, api, auth, invites) {
+              update: (_, auth, invites) {
                 if (auth.forceLogoutTimestamp != null) {
                   invites.reset();
                 }
                 return invites;
               },
             ),
-            ChangeNotifierProvider(
+            ChangeNotifierProxyProvider2<Auth, GroupsProvider,
+                ExpensesProvider>(
               create: (_) => ExpensesProvider(api),
+              update: (_, auth, groups, expenses) {
+                expenses.groupsProvider = groups;
+                if (auth.forceLogoutTimestamp != null) {
+                  expenses.reset();
+                }
+                return expenses;
+              },
             ),
           ],
           child: Selector2<ThemeProvider, Auth, Tuple2<ThemeData, int>>(

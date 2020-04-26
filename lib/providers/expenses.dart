@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sliceit/models/expense.dart';
+import 'package:sliceit/models/group.dart';
 import 'package:sliceit/models/share.dart';
 import 'package:sliceit/providers/base.dart';
 import 'package:sliceit/providers/groups.dart';
@@ -17,9 +18,22 @@ class ExpensesProvider extends BaseProvider {
     _groupsProvider = groupsProvider;
   }
 
+  Expense byId(String expenseId) {
+    final String selectedGroupId = _groupsProvider.selectedGroupId;
+
+    if (_expensesByGroupId.containsKey(selectedGroupId)) {
+      return _expensesByGroupId[selectedGroupId]
+          .firstWhere((expense) => expense.id == expenseId);
+    }
+
+    return null;
+  }
+
   List<Expense> byGroupId(String groupId) {
     if (_expensesByGroupId.containsKey(groupId)) {
-      return _expensesByGroupId[groupId];
+      return _expensesByGroupId[groupId]
+          .where((expense) => !expense.isDeleted)
+          .toList();
     }
 
     return [];
@@ -27,7 +41,10 @@ class ExpensesProvider extends BaseProvider {
 
   int countByGroupId(String groupId) {
     if (_expensesByGroupId.containsKey(groupId)) {
-      return _expensesByGroupId[groupId].length;
+      return _expensesByGroupId[groupId]
+          .where((expense) => !expense.isDeleted)
+          .toList()
+          .length;
     }
     return 0;
   }
@@ -124,6 +141,34 @@ class ExpensesProvider extends BaseProvider {
         [Share(userId: from, amount: 0), Share(userId: to, amount: amount)],
         from,
       );
+
+      status = Status.RESOLVED;
+    } catch (e) {
+      status = Status.REJECTED;
+      rethrow;
+    }
+  }
+
+  Future<void> deleteExpense(String expenseId) async {
+    status = Status.PENDING;
+
+    try {
+      final Group group = _groupsProvider.selectedGroup;
+
+      await _api.deleteExpense(groupId: group.id, expenseId: expenseId);
+      final int expenseIndex = _expensesByGroupId[group.id]
+          .indexWhere((expense) => expense.id == expenseId);
+
+      if (expenseIndex != -1) {
+        final Expense expense = _expensesByGroupId[group.id][expenseIndex];
+        expense.isDeleted = true;
+        group.optimisticBalanceUpdate(
+          expense.amount,
+          expense.shares,
+          expense.payerId,
+          undo: true,
+        );
+      }
 
       status = Status.RESOLVED;
     } catch (e) {

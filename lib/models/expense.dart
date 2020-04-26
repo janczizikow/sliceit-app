@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:sliceit/models/share.dart';
 
 class Expense {
   final String id;
@@ -7,8 +8,10 @@ class Expense {
   final String currency;
   final DateTime date;
   final bool isPayment;
+  bool isDeleted;
   final String payerId;
   final String groupId;
+  final List<Share> shares;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -19,10 +22,12 @@ class Expense {
     @required this.currency,
     @required this.payerId,
     @required this.groupId,
+    @required this.shares,
     @required this.createdAt,
     @required this.date,
     this.updatedAt,
     this.isPayment = false,
+    this.isDeleted = false,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -34,6 +39,8 @@ class Expense {
       payerId: json['payerId'],
       groupId: json['groupId'],
       isPayment: json['isPayment'],
+      isDeleted: json['isDeleted'],
+      shares: SharesList.fromJson(json['shares']).shares,
       date: DateTime.parse(json['date']),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt:

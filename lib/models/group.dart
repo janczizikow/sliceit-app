@@ -55,15 +55,28 @@ class Group {
     return members.firstWhere((member) => member.userId == userId);
   }
 
-  void optimisticBalanceUpdate(int total, List<Share> shares, String payerId) {
+  void optimisticBalanceUpdate(
+    int total,
+    List<Share> shares,
+    String payerId, {
+    bool undo = false,
+  }) {
     int diff;
     // TODO: REFACTOR nested loop
     for (Share share in shares) {
       if (share.userId == payerId) {
         diff = total - share.amount;
-        memberByUserId(share.userId).balance += diff;
+        if (undo) {
+          memberByUserId(share.userId).balance -= diff;
+        } else {
+          memberByUserId(share.userId).balance += diff;
+        }
       } else {
-        memberByUserId(share.userId).balance -= share.amount;
+        if (undo) {
+          memberByUserId(share.userId).balance += share.amount;
+        } else {
+          memberByUserId(share.userId).balance -= share.amount;
+        }
       }
     }
   }

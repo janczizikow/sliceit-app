@@ -12,6 +12,7 @@ class CardInput extends StatelessWidget {
   final TextInputType keyboardType;
   final String prefixText;
   final String hintText;
+  final bool enabled;
 
   const CardInput({
     Key key,
@@ -24,6 +25,7 @@ class CardInput extends StatelessWidget {
     this.keyboardType,
     this.prefixText,
     this.hintText,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -37,6 +39,7 @@ class CardInput extends StatelessWidget {
       textAlign: TextAlign.end,
       onEditingComplete: onEditingComplete,
       onSubmitted: onSubmitted,
+      enabled: enabled,
       android: (context) => MaterialTextFieldData(
         decoration: InputDecoration(
           fillColor: Theme.of(context).cardColor,

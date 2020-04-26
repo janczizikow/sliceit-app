@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/models/expense.dart';
 import 'package:sliceit/models/group.dart';
 import 'package:sliceit/models/member.dart';
 import 'package:sliceit/providers/account.dart';
@@ -15,40 +16,72 @@ import 'package:sliceit/widgets/card_input.dart';
 import 'package:sliceit/widgets/card_picker.dart';
 import 'package:sliceit/widgets/dialog.dart';
 
-class NewPaymentScreen extends StatefulWidget {
-  static const routeName = '/new-payment';
+class PaymentScreenArguments {
+  final String expenseId;
 
-  const NewPaymentScreen({
-    Key key,
-  }) : super(key: key);
-
-  @override
-  _NewPaymentScreenState createState() => _NewPaymentScreenState();
+  PaymentScreenArguments({this.expenseId});
 }
 
-class _NewPaymentScreenState extends State<NewPaymentScreen> {
+class PaymentScreen extends StatefulWidget {
+  static const routeName = '/payment';
+  final String expenseId;
+
+  const PaymentScreen({Key key, this.expenseId}) : super(key: key);
+
+  @override
+  _PaymentScreenState createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
   TextEditingController _amountController;
   Member _from;
   Member _to;
   DateTime _date = new DateTime.now();
+  bool _isInEditingMode = true;
   String _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _amountController = new TextEditingController();
-    final String userId =
-        Provider.of<AccountProvider>(context, listen: false).account?.id;
-    final List<Member> groupMembers =
-        Provider.of<GroupsProvider>(context, listen: false)
-            .selectedGroupMembers;
-    final currentMemberIndex =
-        groupMembers.indexWhere((member) => member.userId == userId);
-    if (currentMemberIndex != -1) {
-      _from = groupMembers[currentMemberIndex];
-      if (groupMembers.length == 2) {
-        _to = groupMembers[currentMemberIndex == 0 ? 1 : 0];
+    if (widget.expenseId == null) {
+      final String userId =
+          Provider.of<AccountProvider>(context, listen: false).account?.id;
+      final List<Member> groupMembers =
+          Provider.of<GroupsProvider>(context, listen: false)
+              .selectedGroupMembers;
+      final currentMemberIndex =
+          groupMembers.indexWhere((member) => member.userId == userId);
+      if (currentMemberIndex != -1) {
+        _from = groupMembers[currentMemberIndex];
+        if (groupMembers.length == 2) {
+          _to = groupMembers[currentMemberIndex == 0 ? 1 : 0];
+        }
       }
+    } else {
+      final Expense payment =
+          Provider.of<ExpensesProvider>(context, listen: false)
+              .byId(widget.expenseId);
+      String amountString = (payment.amount / 100).toString();
+      _amountController.value = _amountController.value.copyWith(
+        text: amountString,
+        selection: TextSelection(
+          baseOffset: amountString.length,
+          extentOffset: amountString.length,
+        ),
+        composing: TextRange.empty,
+      );
+      _from = Provider.of<GroupsProvider>(context, listen: false)
+          .selectedGroupMembers
+          .firstWhere((member) => member.userId == payment.payerId);
+      String toUserId = payment.shares
+          .firstWhere((share) => share.userId != payment.payerId)
+          .userId;
+      _to = Provider.of<GroupsProvider>(context, listen: false)
+          .selectedGroupMembers
+          .firstWhere((member) => member.userId == toUserId);
+      _isInEditingMode = false;
+      _date = payment.date;
     }
   }
 
@@ -56,6 +89,12 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
   dispose() {
     _amountController.dispose();
     super.dispose();
+  }
+
+  void _toggleEditingMode() {
+    setState(() {
+      _isInEditingMode = !_isInEditingMode;
+    });
   }
 
   Future<Member> _pickMember(List<Member> members) async {
@@ -186,22 +225,63 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
     }
   }
 
+  Future<void> _handleUpdatePayment() async {}
+
+  Future<void> _handleDeletePayment() async {
+    bool result = await showPlatformDialog(
+      context: context,
+      builder: (_) => PlatformAlertDialog(
+        title: const Text('Delete payment'),
+        content: const Text(
+            'This will completely remove this payment for ALL people involved, not just you.'),
+        actions: <Widget>[
+          PlatformDialogAction(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: PlatformText('Cancel'),
+          ),
+          PlatformDialogAction(
+            child: PlatformText('Delete'),
+            onPressed: () => Navigator.of(context).pop(true),
+            ios: (_) => CupertinoDialogActionData(isDestructiveAction: true),
+          ),
+        ],
+      ),
+    );
+
+    if (result) {
+      showLoadingDialog(context);
+      try {
+        await Provider.of<ExpensesProvider>(context, listen: false)
+            .deleteExpense(widget.expenseId);
+        Navigator.of(context).popUntil(ModalRoute.withName('/'));
+      } on ApiError catch (e) {
+        Navigator.of(context).pop();
+        showErrorDialog(context, e.message);
+      } catch (e) {
+        Navigator.of(context).pop();
+        showErrorDialog(context, 'Failed to delete payment');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Selector<GroupsProvider, List<Member>>(
       selector: (_, groups) => groups.selectedGroupMembers,
       builder: (_, members, __) => PlatformScaffold(
         appBar: PlatformAppBar(
-          title: const Text('New Payment'),
-          trailingActions: <Widget>[
-            PlatformButton(
-              androidFlat: (_) => MaterialFlatButtonData(
-                textColor: Colors.white,
-              ),
-              child: PlatformText('Save'),
-              onPressed: _handleAddPayment,
-            ),
-          ],
+          title: Text(widget.expenseId == null ? 'New Payment' : 'Payment'),
+          trailingActions: _isInEditingMode
+              ? <Widget>[
+                  PlatformButton(
+                    androidFlat: (_) => MaterialFlatButtonData(
+                      textColor: Colors.white,
+                    ),
+                    child: PlatformText(_isInEditingMode ? 'Save' : 'Edit'),
+                    onPressed: _handleAddPayment,
+                  ),
+                ]
+              : [],
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -215,6 +295,7 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   prefixText: 'Amount',
                   hintText: '0.00',
+                  enabled: _isInEditingMode,
                   inputFormatters: [
                     MoneyTextInputFormatter(),
                   ],
@@ -223,20 +304,34 @@ class _NewPaymentScreenState extends State<NewPaymentScreen> {
                 CardPicker(
                   prefix: 'From',
                   text: _from?.fullName ?? '',
-                  onPressed: _pickFrom,
+                  onPressed: _isInEditingMode ? _pickFrom : null,
                 ),
                 const Divider(height: 1),
                 CardPicker(
                   prefix: 'To',
                   text: _to?.fullName ?? '',
-                  onPressed: _pickTo,
+                  onPressed: _isInEditingMode ? _pickTo : null,
                 ),
                 const SizedBox(height: 16),
                 CardPicker(
                   prefix: 'Date',
                   text: DateFormat.yMMMd().format(_date),
-                  onPressed: _pickDate,
+                  onPressed: _isInEditingMode ? _pickDate : null,
                 ),
+                const SizedBox(height: 16),
+                if (widget.expenseId != null)
+                  PlatformButton(
+                    androidFlat: (_) => MaterialFlatButtonData(
+                      colorBrightness: Brightness.dark,
+                    ),
+                    child: Text(
+                      'Delete payment',
+                      style: TextStyle(
+                        color: Theme.of(context).errorColor,
+                      ),
+                    ),
+                    onPressed: _handleDeletePayment,
+                  )
               ],
             ),
           ),

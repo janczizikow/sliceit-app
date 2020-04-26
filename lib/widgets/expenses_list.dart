@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-
-import './empty_expenses.dart';
-import '../models/expense.dart';
-import '../providers/base.dart';
-import '../providers/groups.dart';
-import '../providers/expenses.dart';
-import '../utils/currencies.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:sliceit/models/expense.dart';
+import 'package:sliceit/providers/base.dart';
+import 'package:sliceit/providers/expenses.dart';
+import 'package:sliceit/providers/groups.dart';
+import 'package:sliceit/screens/payment.dart';
+import 'package:sliceit/utils/currencies.dart';
+import 'package:sliceit/widgets/empty_expenses.dart';
+import 'package:tuple/tuple.dart';
 
 class ExpensesList extends StatefulWidget {
   @override
@@ -112,6 +112,16 @@ class _ExpensesListState extends State<ExpensesList> {
                         return Column(
                           children: <Widget>[
                             ListTile(
+                              onTap: () {
+                                if (expense.isPayment) {
+                                  Navigator.of(context).pushNamed(
+                                    PaymentScreen.routeName,
+                                    arguments: PaymentScreenArguments(
+                                      expenseId: expense.id,
+                                    ),
+                                  );
+                                } else {}
+                              },
                               leading: CircleAvatar(
                                 child: Icon(
                                   expense.isPayment

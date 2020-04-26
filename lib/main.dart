@@ -21,7 +21,7 @@ import 'package:sliceit/screens/forgot_password.dart';
 import 'package:sliceit/screens/group_invites.dart';
 import 'package:sliceit/screens/login.dart';
 import 'package:sliceit/screens/new_expense.dart';
-import 'package:sliceit/screens/new_payment.dart';
+import 'package:sliceit/screens/payment.dart';
 import 'package:sliceit/screens/register.dart';
 import 'package:sliceit/screens/root.dart';
 import 'package:sliceit/screens/settings.dart';
@@ -146,11 +146,13 @@ class _MyAppState extends State<MyApp> {
           fullscreenDialog: true,
           settings: settings,
         );
-      case NewPaymentScreen.routeName:
+      case PaymentScreen.routeName:
+        final PaymentScreenArguments args = settings.arguments;
         return platformPageRoute(
           context: context,
-          builder: (context) => NewPaymentScreen(),
-          fullscreenDialog: true,
+          builder: (context) =>
+              PaymentScreen(expenseId: args?.expenseId ?? null),
+          fullscreenDialog: args?.expenseId == null ?? true,
         );
       case NewExpenseScreen.routeName:
         return platformPageRoute(

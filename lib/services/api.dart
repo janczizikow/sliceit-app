@@ -402,4 +402,20 @@ class Api with ErrorMessageFormatter {
       }
     }
   }
+
+  Future<bool> deleteExpense({
+    @required String groupId,
+    @required String expenseId,
+  }) async {
+    try {
+      await _dio.delete("/groups/$groupId/expenses/$expenseId");
+      return true;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
 }

@@ -15,14 +15,17 @@ class CardPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return PlatformButton(
       android: (_) => MaterialRaisedButtonData(
+        disabledColor: theme.cardColor,
+        disabledTextColor: theme.textTheme.button.color,
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(Radius.zero),
         ),
       ),
       padding: const EdgeInsets.all(16),
-      color: Theme.of(context).cardColor,
+      color: theme.cardColor,
       onPressed: onPressed,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

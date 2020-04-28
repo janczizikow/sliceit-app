@@ -90,6 +90,11 @@ class Api with ErrorMessageFormatter {
               } catch (err) {
                 _authService.forceLogout();
                 return err;
+              } finally {
+                // unlock dio
+                _dio.unlock();
+                _dio.interceptors.responseLock.unlock();
+                _dio.interceptors.errorLock.unlock();
               }
             }
           }

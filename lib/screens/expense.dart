@@ -404,7 +404,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('build');
     final currency =
         Provider.of<GroupsProvider>(context).selectedGroup.currency;
     final theme = Theme.of(context);

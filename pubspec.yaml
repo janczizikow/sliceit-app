@@ -22,6 +22,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   dio: ^3.0.9
   dio_flutter_transformer: ^3.0.2
+  firebase_messaging: ^6.0.13
   flutter:
     sdk: flutter
   flutter_dotenv: ^2.1.0

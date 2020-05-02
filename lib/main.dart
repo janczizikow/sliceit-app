@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,20 @@ import 'package:sliceit/services/api.dart';
 import 'package:sliceit/services/navigation_service.dart';
 import 'package:sliceit/widgets/no_animation_material_page_route.dart';
 import 'package:tuple/tuple.dart';
+
+Future<dynamic> _backgroundMessageHandler(Map<String, dynamic> message) {
+  if (message.containsKey('data')) {
+    // Handle data message
+    final dynamic data = message['data'];
+  }
+
+  if (message.containsKey('notification')) {
+    // Handle notification message
+    final dynamic notification = message['notification'];
+  }
+
+  // Or do other work.
+}
 
 Future<Null> main() async {
   await DotEnv().load('.env');
@@ -74,6 +89,27 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   static final NavigationService _navigationService = NavigationService();
   static final Auth _auth = Auth(_navigationService);
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print(message);
+      },
+      onBackgroundMessage: _backgroundMessageHandler,
+      onLaunch: (Map<String, dynamic> message) async {
+        print(message);
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print(message);
+      },
+    );
+    _firebaseMessaging.getToken().then((String token) {
+      print(token);
+    });
+  }
 
   Future<void> _showForceLogoutDialog() async {
     final context =

@@ -139,6 +139,46 @@ class Api with ErrorMessageFormatter {
     }
   }
 
+  Future<void> postFcmRegistrationToken(String fcmToken) async {
+    try {
+      final response = await _dio.post('/users/fcm-token', data: {
+        'fcmToken': fcmToken,
+      });
+      return Account.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  Future<Account> updateNotificationSettings({
+    bool notifyWhenAddedToGroup,
+    bool notifyWhenExpenseAdded,
+    bool notifyWhenExpenseUpdated,
+    bool notifyWhenPaymentAdded,
+    bool notifyWhenPaymentUpdated,
+  }) async {
+    try {
+      final response = await _dio.patch('/users/notification-settings', data: {
+        'notifyWhenAddedToGroup': notifyWhenAddedToGroup,
+        'notifyWhenExpenseAdded': notifyWhenExpenseAdded,
+        'notifyWhenExpenseUpdated': notifyWhenExpenseUpdated,
+        'notifyWhenPaymentAdded': notifyWhenPaymentAdded,
+        'notifyWhenPaymentUpdated': notifyWhenPaymentUpdated,
+      });
+      return Account.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> uploadAvatar(String path) async {
     FormData formData = FormData.fromMap({
       'avatar': await MultipartFile.fromFile(

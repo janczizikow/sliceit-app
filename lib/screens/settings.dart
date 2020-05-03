@@ -6,6 +6,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
+import 'package:sliceit/screens/notifications.dart';
 import 'package:sliceit/widgets/dialog.dart';
 import 'package:tuple/tuple.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -437,9 +438,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(color: Theme.of(context).accentColor),
                   ),
                 ),
-                const ListTile(
+                ListTile(
                   leading: const Icon(Icons.notifications_none),
                   title: const Text('Notifications'),
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(NotificationsScreen.routeName),
                 ),
                 const Divider(height: 1),
                 const ListTile(

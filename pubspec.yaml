@@ -26,6 +26,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_dotenv: ^2.1.0
+  flutter_local_notifications: ^1.4.2
   flutter_platform_widgets: ^0.32.5
   flutter_secure_storage: ^3.3.1+1
   flutter_speed_dial: ^1.2.5

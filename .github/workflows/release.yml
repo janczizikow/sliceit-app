@@ -52,6 +52,10 @@ jobs:
           SENTRY_DNS: ${{ secrets.SENTRY_DNS }}
       - run: flutter pub get
       # - run: flutter test
+      - name: Restore google-services.json
+        run: echo $GOOGLE_SERVICES | base64 -d > android/app/google-services.json
+        env:
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
       - run: flutter build appbundle
         env:
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}

@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry/sentry.dart';
@@ -21,6 +23,7 @@ import 'package:sliceit/screens/expense.dart';
 import 'package:sliceit/screens/forgot_password.dart';
 import 'package:sliceit/screens/group_invites.dart';
 import 'package:sliceit/screens/login.dart';
+import 'package:sliceit/screens/notifications.dart';
 import 'package:sliceit/screens/payment.dart';
 import 'package:sliceit/screens/register.dart';
 import 'package:sliceit/screens/root.dart';
@@ -74,6 +77,63 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   static final NavigationService _navigationService = NavigationService();
   static final Auth _auth = Auth(_navigationService);
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  final ValueNotifier<String> _fcmRegistrationToken = ValueNotifier('');
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseMessaging.getToken().then((String token) {
+      _fcmRegistrationToken.value = token ?? '';
+    });
+    initializeNotifications();
+  }
+
+  Future<void> initializeNotifications() async {
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('mipmap/ic_launcher');
+    var initializationSettingsIOS = IOSInitializationSettings();
+    var initializationSettings = InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        if (message.containsKey('notification')) {
+          await _showLocalNotification(
+            message['notification']['title'],
+            message['notification']['body'],
+          );
+        }
+      },
+      onLaunch: (Map<String, dynamic> message) async {},
+      onResume: (Map<String, dynamic> message) async {},
+    );
+  }
+
+  Future<void> _showLocalNotification(String title, String body) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'foreground',
+      'Foreground',
+      'Foreground Notifications',
+      styleInformation: BigTextStyleInformation(''),
+      color: const Color(0xff0062ff),
+    );
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    // Workaround for
+    // https://github.com/FirebaseExtended/flutterfire/issues/1669
+    // use the same id to prevent duplicate notifications
+    const id = 0;
+    await _flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
+  }
 
   Future<void> _showForceLogoutDialog() async {
     final context =
@@ -180,6 +240,12 @@ class _MyAppState extends State<MyApp> {
           builder: (context) => EditEmailScreen(),
           settings: settings,
         );
+      case NotificationsScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => NotificationsScreen(),
+          settings: settings,
+        );
       default:
         return null;
     }
@@ -198,13 +264,17 @@ class _MyAppState extends State<MyApp> {
         Provider<Api>(
           create: (_) => Api(_auth),
         ),
+        ValueListenableProvider<String>.value(
+          value: _fcmRegistrationToken,
+        ),
       ],
-      child: Consumer<Api>(
-        builder: (_, api, __) => MultiProvider(
+      child: Consumer2<Api, String>(
+        builder: (_, api, fcmRegistrationToken, __) => MultiProvider(
           providers: [
-            ChangeNotifierProxyProvider<Auth, AccountProvider>(
+            ChangeNotifierProxyProvider2<Auth, String, AccountProvider>(
               create: (_) => AccountProvider(api),
-              update: (_, auth, account) {
+              update: (_, auth, fcmRegistrationToken, account) {
+                account.fcmRegistrationToken = fcmRegistrationToken;
                 if (auth.forceLogoutTimestamp != null) {
                   account.reset();
                 }

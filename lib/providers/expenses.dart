@@ -149,6 +149,61 @@ class ExpensesProvider extends BaseProvider {
     }
   }
 
+  Future<void> updatePayment({
+    @required String groupId,
+    @required String expenseId,
+    @required int amount,
+    @required String from,
+    @required String to,
+    @required String currency,
+    @required String date,
+  }) async {
+    assert(_groupsProvider != null);
+    status = Status.PENDING;
+    try {
+      final Expense payment = await _api.updatePayment(
+        groupId: groupId,
+        expenseId: expenseId,
+        amount: amount,
+        from: from,
+        to: to,
+        currency: currency,
+        date: date,
+      );
+
+      if (_expensesByGroupId.containsKey(groupId)) {
+        final groupExpenses = _expensesByGroupId[groupId];
+        int expenseIndex =
+            groupExpenses.indexWhere((expense) => expense.id == expenseId);
+        if (expenseIndex != -1) {
+          final previousExpense = groupExpenses[expenseIndex];
+          groupExpenses[expenseIndex] = payment;
+          _groupsProvider.selectedGroup.optimisticBalanceUpdate(
+            previousExpense.amount,
+            previousExpense.shares,
+            previousExpense.payerId,
+            undo: true,
+          );
+        } else {
+          groupExpenses.insert(0, payment);
+        }
+      } else {
+        _expensesByGroupId[groupId] = [payment];
+      }
+
+      _groupsProvider.selectedGroup.optimisticBalanceUpdate(
+        payment.amount,
+        payment.shares,
+        payment.payerId,
+      );
+
+      status = Status.RESOLVED;
+    } catch (e) {
+      status = Status.REJECTED;
+      rethrow;
+    }
+  }
+
   Future<void> deleteExpense(String expenseId) async {
     status = Status.PENDING;
 

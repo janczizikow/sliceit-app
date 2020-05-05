@@ -448,6 +448,34 @@ class Api with ErrorMessageFormatter {
     }
   }
 
+  Future<Expense> updatePayment({
+    @required String groupId,
+    @required String expenseId,
+    int amount,
+    String from,
+    String to,
+    String currency,
+    String date,
+  }) async {
+    try {
+      final response =
+          await _dio.patch("/groups/$groupId/payments/$expenseId", data: {
+        'amount': amount,
+        'from': from,
+        'to': to,
+        'currency': currency,
+        'date': date,
+      });
+      return Expense.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
   Future<bool> deleteExpense({
     @required String groupId,
     @required String expenseId,

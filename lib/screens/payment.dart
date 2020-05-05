@@ -34,6 +34,7 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   TextEditingController _amountController;
+  FocusNode _amountFocusNode;
   Member _from;
   Member _to;
   DateTime _date = new DateTime.now();
@@ -44,6 +45,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void initState() {
     super.initState();
     _amountController = new TextEditingController();
+    _amountFocusNode = FocusNode();
     if (widget.expenseId == null) {
       final String userId =
           Provider.of<AccountProvider>(context, listen: false).account?.id;
@@ -88,6 +90,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   dispose() {
     _amountController.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
@@ -225,7 +228,34 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
-  Future<void> _handleUpdatePayment() async {}
+  Future<void> _handleUpdatePayment() async {
+    Group group =
+        Provider.of<GroupsProvider>(context, listen: false).selectedGroup;
+    assert(group != null);
+    final bool isValid = _validate();
+
+    if (!isValid) {
+      showErrorDialog(context, _errorMessage);
+    } else {
+      try {
+        await Provider.of<ExpensesProvider>(context, listen: false)
+            .updatePayment(
+          groupId: group.id,
+          expenseId: widget.expenseId,
+          currency: group.currency,
+          amount: (double.parse(_amountController.text) * 100).toInt(),
+          from: _from.userId,
+          to: _to.userId,
+          date: _date.toIso8601String(),
+        );
+        Navigator.of(context).pop();
+      } on ApiError catch (err) {
+        showErrorDialog(context, err.message);
+      } catch (e) {
+        showErrorDialog(context, 'Failed to add payment!');
+      }
+    }
+  }
 
   Future<void> _handleDeletePayment() async {
     bool result = await showPlatformDialog(
@@ -266,22 +296,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isNewPayment = widget.expenseId == null;
+
     return Selector<GroupsProvider, List<Member>>(
       selector: (_, groups) => groups.selectedGroupMembers,
       builder: (_, members, __) => PlatformScaffold(
         appBar: PlatformAppBar(
-          title: Text(widget.expenseId == null ? 'New Payment' : 'Payment'),
-          trailingActions: _isInEditingMode
-              ? <Widget>[
-                  PlatformButton(
-                    androidFlat: (_) => MaterialFlatButtonData(
-                      textColor: Colors.white,
-                    ),
-                    child: PlatformText(_isInEditingMode ? 'Save' : 'Edit'),
-                    onPressed: _handleAddPayment,
-                  ),
-                ]
-              : [],
+          title: Text(isNewPayment ? 'New Payment' : 'Payment'),
+          trailingActions: <Widget>[
+            PlatformButton(
+              androidFlat: (_) => MaterialFlatButtonData(
+                textColor: Colors.white,
+              ),
+              child: PlatformText(_isInEditingMode ? 'Save' : 'Edit'),
+              onPressed: _isInEditingMode
+                  ? isNewPayment ? _handleAddPayment : _handleUpdatePayment
+                  : _toggleEditingMode,
+            ),
+          ],
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -292,6 +324,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 CardInput(
                   autofocus: true,
                   controller: _amountController,
+                  focusNode: _amountFocusNode,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   prefixText: 'Amount',
                   hintText: '0.00',

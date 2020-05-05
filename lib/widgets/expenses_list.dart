@@ -95,7 +95,7 @@ class _ExpensesListState extends State<ExpensesList> {
                       ],
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.only(bottom: 8),
                       itemCount: data.item1 == Status.PENDING
                           ? data.item2.length + 1
                           : data.item2.length,
@@ -169,7 +169,7 @@ class _ExpensesListState extends State<ExpensesList> {
                                         ),
                               ),
                             ),
-                            const Divider(),
+                            const Divider(height: 1),
                           ],
                         );
                       },

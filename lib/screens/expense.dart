@@ -54,14 +54,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     super.initState();
     _nameController = new TextEditingController();
     _amountController = new TextEditingController();
-    _amountController.addListener(_handleAmountChanged);
     _amountFocusNode = new FocusNode();
     final GroupsProvider groupsProvider =
         Provider.of<GroupsProvider>(context, listen: false);
+    final List<Member> groupMembers = groupsProvider.selectedGroupMembers;
     if (widget.expenseId == null) {
       final String userId =
           Provider.of<AccountProvider>(context, listen: false).account?.id;
-      final List<Member> groupMembers = groupsProvider.selectedGroupMembers;
       _payer = groupMembers.firstWhere((member) => member.userId == userId);
       _participants = groupMembers.map((member) {
         return Tuple3(member, 0, true);
@@ -91,14 +90,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       _payer = groupsProvider.selectedGroupMembers
           .firstWhere((member) => member.userId == expense.payerId);
       // TODO: Refactor nested loop
-      _participants = expense.shares.map((share) {
-        Member member = groupsProvider.selectedGroupMembers
-            .firstWhere((member) => member.userId == share.userId);
-        return Tuple3(member, share.amount, true);
+      _participants = groupMembers.map((member) {
+        Share share = expense.shares.firstWhere(
+            (share) => share.userId == member.userId,
+            orElse: () => null);
+        return Tuple3(member, share?.amount ?? 0, share != null);
       }).toList();
       _date = expense.date;
       _isInEditingMode = false;
     }
+    // needs to be added after setting participants
+    _amountController.addListener(_handleAmountChanged);
   }
 
   @override
@@ -149,6 +151,12 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         }
       });
     }
+  }
+
+  void _toggleEditingMode() {
+    setState(() {
+      _isInEditingMode = !_isInEditingMode;
+    });
   }
 
   void _toggleEqualSplit(bool isEqualSplit) {
@@ -365,6 +373,55 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     }
   }
 
+  Future<void> _handleUpdateExpense() async {
+    Group group =
+        Provider.of<GroupsProvider>(context, listen: false).selectedGroup;
+    assert(group != null);
+
+    final bool isValid = _validate();
+
+    if (!isValid) {
+      showErrorDialog(context, _errorMessage);
+    } else {
+      try {
+        List<String> participantsIds = _participants
+            .where((participation) => participation.item3)
+            .map((p) => p.item1.userId)
+            .toList();
+        await Provider.of<ExpensesProvider>(context, listen: false)
+            .updateExpense(
+          groupId: group.id,
+          expenseId: widget.expenseId,
+          currency: group.currency,
+          payerId: _payer.userId,
+          name: _nameController.text,
+          shares: _equalSplit
+              ? _participants
+                  .where((participation) => participation.item3)
+                  .map((p) {
+                  return Share(
+                      userId: p.item1.userId,
+                      amount: _payer.userId == p.item1.userId
+                          ? (_total / participantsIds.length).ceil()
+                          : (_total / participantsIds.length).floor());
+                }).toList()
+              : _participants
+                  .where((participation) => participation.item2 > 0)
+                  .map((p) {
+                  return Share(userId: p.item1.userId, amount: p.item2);
+                }).toList(),
+          amount: _total,
+          date: _date.toIso8601String(),
+        );
+        Navigator.of(context).pop();
+      } on ApiError catch (err) {
+        showErrorDialog(context, err.message);
+      } catch (e) {
+        showErrorDialog(context, 'Failed to add expense!');
+      }
+    }
+  }
+
   Future<void> _handleDeleteExpense() async {
     bool result = await showPlatformDialog(
       context: context,
@@ -415,20 +472,22 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     final participantsTotal = _participants.fold(0, (acc, current) {
       return acc + (current.item2);
     });
+    final bool isNewExpense = widget.expenseId == null;
+
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text(widget.expenseId == null ? 'New Expense' : 'Expense'),
-        trailingActions: widget.expenseId == null
-            ? <Widget>[
-                PlatformButton(
-                  androidFlat: (_) => MaterialFlatButtonData(
-                    textColor: Colors.white,
-                  ),
-                  child: PlatformText('Save'),
-                  onPressed: _handleAddExpense,
-                ),
-              ]
-            : [],
+        title: Text(isNewExpense ? 'New Expense' : 'Expense'),
+        trailingActions: <Widget>[
+          PlatformButton(
+            androidFlat: (_) => MaterialFlatButtonData(
+              textColor: Colors.white,
+            ),
+            child: PlatformText(_isInEditingMode ? 'Save' : 'Edit'),
+            onPressed: _isInEditingMode
+                ? isNewExpense ? _handleAddExpense : _handleUpdateExpense
+                : _toggleEditingMode,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -486,6 +545,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     ..._participants
                         .asMap()
                         .map((int i, participant) {
+                          // Don't show in active participants in Expense detail
+                          // if not in editing mode
+                          if (!_isInEditingMode &&
+                              !isNewExpense &&
+                              !participant.item3) {
+                            return MapEntry(i, Container());
+                          }
+
                           return MapEntry(
                             i,
                             ListTile(

@@ -639,7 +639,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                         title: Text(
                           'You must select at least one person to add expense',
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.subtitle
+                          style: theme.textTheme.subtitle2
                               .copyWith(color: theme.errorColor),
                         ),
                       )

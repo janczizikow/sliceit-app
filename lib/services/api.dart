@@ -422,6 +422,36 @@ class Api with ErrorMessageFormatter {
     }
   }
 
+  Future<Expense> updateExpense({
+    @required groupId,
+    @required String expenseId,
+    String name,
+    int amount,
+    String payerId,
+    List<Share> shares,
+    String currency,
+    String date,
+  }) async {
+    try {
+      final response =
+          await _dio.patch("/groups/$groupId/expenses/$expenseId", data: {
+        'name': name,
+        'amount': amount,
+        'payerId': payerId,
+        'shares': shares,
+        'currency': currency,
+        'date': date,
+      });
+      return Expense.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
   Future<Expense> createPayment({
     @required String groupId,
     @required int amount,
@@ -432,6 +462,34 @@ class Api with ErrorMessageFormatter {
   }) async {
     try {
       final response = await _dio.post("/groups/$groupId/payments/", data: {
+        'amount': amount,
+        'from': from,
+        'to': to,
+        'currency': currency,
+        'date': date,
+      });
+      return Expense.fromJson(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        throw ApiError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  Future<Expense> updatePayment({
+    @required String groupId,
+    @required String expenseId,
+    int amount,
+    String from,
+    String to,
+    String currency,
+    String date,
+  }) async {
+    try {
+      final response =
+          await _dio.patch("/groups/$groupId/payments/$expenseId", data: {
         'amount': amount,
         'from': from,
         'to': to,

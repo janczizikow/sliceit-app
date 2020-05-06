@@ -164,12 +164,12 @@ class _MyAppState extends State<MyApp> {
       case Root.routeName:
         return Theme.of(context).platform == TargetPlatform.iOS
             ? CupertinoPageRoute(
-                builder: (context) => new Root(),
-                settings: settings.copyWith(isInitialRoute: true),
+                builder: (context) => Root(),
+                settings: settings,
               )
             : NoAnimationMaterialPageRoute(
-                builder: (context) => new Root(),
-                settings: settings.copyWith(isInitialRoute: true),
+                builder: (context) => Root(),
+                settings: settings,
               );
       case RegisterScreen.routeName:
         return platformPageRoute(

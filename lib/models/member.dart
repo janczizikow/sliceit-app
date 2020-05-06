@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 class Member {
@@ -35,4 +37,21 @@ class Member {
 
   get initials => RegExp(r'\S+').allMatches(fullName).fold('',
       (acc, match) => acc + fullName.substring(match.start, match.start + 1));
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'userId': userId,
+      'groupId': groupId,
+      'firstName': firstName,
+      'lastName': lastName,
+      'avatar': avatar,
+      'balance': balance,
+    };
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toMap());
+  }
 }

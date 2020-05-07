@@ -19,7 +19,7 @@ class NotificationsScreen extends StatelessWidget {
             ListTile(
               title: PlatformText(
                 'Groups',
-                style: theme.textTheme.subtitle,
+                style: theme.textTheme.subtitle2,
               ),
             ),
             SwitchListTile(
@@ -55,7 +55,7 @@ class NotificationsScreen extends StatelessWidget {
             ListTile(
               title: PlatformText(
                 'Payments',
-                style: theme.textTheme.subtitle,
+                style: theme.textTheme.subtitle2,
               ),
             ),
             SwitchListTile(

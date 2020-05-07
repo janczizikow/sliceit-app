@@ -51,9 +51,9 @@ Future<Null> main() async {
   // This creates a [Zone] that contains the Flutter application and establishes
   // an error handler that captures errors and reports them.
   // https://api.dartlang.org/stable/1.24.2/dart-async/Zone-class.html
-  runZoned<Future<Null>>(() async {
+  runZonedGuarded<Future<Null>>(() async {
     runApp(new MyApp(prefs));
-  }, onError: (error, stackTrace) async {
+  }, (error, stackTrace) async {
     if (!kReleaseMode) {
       print(stackTrace);
       print('In dev mode. Not sending report to Sentry.io.');

@@ -20,7 +20,7 @@ class SpeedDialLabel extends StatelessWidget {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.body2,
+            style: Theme.of(context).textTheme.bodyText2,
           ),
           const SizedBox(height: 4),
           Text(

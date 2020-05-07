@@ -15,7 +15,7 @@ class CurrenciesScreen extends StatelessWidget {
         ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).textTheme.body2.color,
+            foregroundColor: Theme.of(context).textTheme.bodyText2.color,
             child: Text(
               currency.code,
               style: TextStyle(fontWeight: FontWeight.w500),
@@ -73,7 +73,7 @@ class CurrenciesSearchDelegate extends SearchDelegate<Currency> {
         primaryIconTheme: theme.primaryIconTheme,
         primaryColorBrightness: Brightness.dark,
         textTheme: theme.textTheme.copyWith(
-          title: TextStyle(fontWeight: FontWeight.normal),
+          headline6: TextStyle(fontWeight: FontWeight.normal),
         ),
       );
     } else {
@@ -120,7 +120,7 @@ class CurrenciesSearchDelegate extends SearchDelegate<Currency> {
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).textTheme.body2.color,
+            foregroundColor: Theme.of(context).textTheme.bodyText2.color,
             child: Text(
               results[i].code,
               style: TextStyle(fontWeight: FontWeight.w500),
@@ -148,7 +148,7 @@ class CurrenciesSearchDelegate extends SearchDelegate<Currency> {
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).textTheme.body2.color,
+            foregroundColor: Theme.of(context).textTheme.bodyText2.color,
             child: Text(
               suggestions[i].code,
               style: TextStyle(fontWeight: FontWeight.w500),

@@ -34,7 +34,7 @@ class EmptyExpenses extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No expenses',
-            style: Theme.of(context).textTheme.body2.copyWith(fontSize: 18),
+            style: Theme.of(context).textTheme.bodyText2.copyWith(fontSize: 18),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),

@@ -45,9 +45,13 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
 
   Future<void> restoreTokens() async {
     _setStatus(AuthStatus.RESTORING_TOKENS);
-    String accessToken = await _storage.read(key: ACCESS_TOKEN_KEY);
-    String refreshToken = await _storage.read(key: REFRESH_TOKEN_KEY);
-    _setTokens(accessToken: accessToken, refreshToken: refreshToken);
+    try {
+      String accessToken = await _storage.read(key: ACCESS_TOKEN_KEY);
+      String refreshToken = await _storage.read(key: REFRESH_TOKEN_KEY);
+      _setTokens(accessToken: accessToken, refreshToken: refreshToken);
+    } catch (e) {
+      _setTokens(accessToken: null, refreshToken: null);
+    }
   }
 
   Future<void> refreshTokens() async {

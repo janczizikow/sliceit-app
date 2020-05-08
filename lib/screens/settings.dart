@@ -161,6 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     if (_image == null) {
+      auth.disablePasscodeLock = false;
       return;
     }
 

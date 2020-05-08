@@ -181,6 +181,8 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
 
   Future<void> setPinCode(String pin) async {
     _pin = pin;
+    _passcodeStatus =
+        pin == null ? PasscodeStatus.DISABLED : PasscodeStatus.VERIFIED;
     notifyListeners();
     await _storage.write(key: PIN_KEY, value: pin);
   }
@@ -197,6 +199,7 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
 
   Future<void> clearPinCode() async {
     _pin = null;
+    _passcodeStatus = PasscodeStatus.DISABLED;
     notifyListeners();
     await _storage.delete(key: PIN_KEY);
   }

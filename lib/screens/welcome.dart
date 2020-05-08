@@ -23,7 +23,7 @@ class WelcomeScreen extends StatelessWidget {
                     Text(
                       'Split shared expenses with ease',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.title,
+                      style: Theme.of(context).textTheme.headline6,
                     ),
                   ],
                 ),

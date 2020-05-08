@@ -194,7 +194,7 @@ class BalanceList extends StatelessWidget {
                     name: data.item3,
                     symbol: currencies[data.item3]['symbol'],
                   ).format(data.item2[i].balance / 100),
-                  style: theme.textTheme.body2.copyWith(
+                  style: theme.textTheme.bodyText2.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),

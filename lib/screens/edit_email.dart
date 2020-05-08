@@ -77,11 +77,11 @@ class _EditEmailState extends State<EditEmailScreen> {
   Widget build(BuildContext context) {
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: Text('Edit Email'),
+        title: const Text('Edit Email'),
         trailingActions: <Widget>[
           PlatformIconButton(
-            iosIcon: Icon(CupertinoIcons.check_mark),
-            androidIcon: Icon(Icons.check),
+            iosIcon: const Icon(CupertinoIcons.check_mark),
+            androidIcon: const Icon(Icons.check),
             onPressed: _isLoading ? null : _editName,
           ),
         ],

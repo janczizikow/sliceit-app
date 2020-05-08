@@ -20,7 +20,7 @@ class OfflineScreen extends StatelessWidget {
               Text(
                 "You're offline",
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.title,
+                style: Theme.of(context).textTheme.headline6,
               ),
               const SizedBox(height: 8),
               const Text(

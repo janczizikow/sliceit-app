@@ -33,6 +33,7 @@ dependencies:
   image_cropper: ^1.2.1
   image_picker: ^0.6.5
   intl: ^0.16.1
+  local_auth: ^0.6.2+1
   meta: ^1.1.8
   mime: ^0.9.6+3
   package_info: ">=0.4.0+16 <2.0.0"

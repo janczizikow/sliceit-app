@@ -162,11 +162,13 @@ class _ExpensesListState extends State<ExpensesList> {
                                   symbol: currencies[expense.currency]
                                       ['symbol'],
                                 ).format(expense.amount / 100),
-                                style:
-                                    Theme.of(context).textTheme.body2.copyWith(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyText2
+                                    .copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                             ),
                             const Divider(height: 1),

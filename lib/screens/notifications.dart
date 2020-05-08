@@ -33,7 +33,7 @@ class NotificationsScreen extends StatelessWidget {
             ListTile(
               title: PlatformText(
                 'Expenses',
-                style: theme.textTheme.subtitle,
+                style: theme.textTheme.subtitle2,
               ),
             ),
             SwitchListTile(

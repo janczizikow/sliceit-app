@@ -2,14 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-class Member {
+class Member with ChangeNotifier {
   final String id;
   final String userId;
   final String groupId;
   final String firstName;
   final String lastName;
   final String avatar;
-  int balance;
+  int _balance;
 
   Member({
     @required this.id,
@@ -18,8 +18,10 @@ class Member {
     @required this.firstName,
     @required this.lastName,
     this.avatar,
-    this.balance = 0,
-  });
+    int balance = 0,
+  }) {
+    this._balance = balance;
+  }
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
@@ -38,6 +40,13 @@ class Member {
   get initials => RegExp(r'\S+').allMatches(fullName).fold('',
       (acc, match) => acc + fullName.substring(match.start, match.start + 1));
 
+  get balance => _balance;
+
+  set balance(int bal) {
+    _balance = bal;
+    notifyListeners();
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -46,12 +55,24 @@ class Member {
       'firstName': firstName,
       'lastName': lastName,
       'avatar': avatar,
-      'balance': balance,
+      'balance': _balance,
     };
   }
 
   @override
   String toString() {
     return jsonEncode(toMap());
+  }
+
+  Member copy() {
+    return Member(
+      id: id,
+      userId: userId,
+      groupId: groupId,
+      firstName: firstName,
+      lastName: lastName,
+      avatar: avatar,
+      balance: _balance,
+    );
   }
 }

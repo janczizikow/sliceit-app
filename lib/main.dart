@@ -31,6 +31,7 @@ import 'package:sliceit/screens/pin_code.dart';
 import 'package:sliceit/screens/register.dart';
 import 'package:sliceit/screens/root.dart';
 import 'package:sliceit/screens/settings.dart';
+import 'package:sliceit/screens/suggested_payments.dart';
 import 'package:sliceit/services/api.dart';
 import 'package:sliceit/services/navigation_service.dart';
 import 'package:sliceit/widgets/no_animation_material_page_route.dart';
@@ -229,6 +230,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           context: context,
           builder: (context) => ForgotPasswordScreen(),
           settings: settings,
+        );
+      case SuggestedPaymentsScreen.routeName:
+        final SuggestedPaymentsScreenArguments args = settings.arguments;
+        return platformPageRoute(
+          context: context,
+          builder: (context) => SuggestedPaymentsScreen(
+            groupId: args.groupId,
+          ),
+          settings: settings,
+          fullscreenDialog: true,
         );
       case EditGroupScreen.routeName:
         return platformPageRoute(

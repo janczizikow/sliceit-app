@@ -128,7 +128,10 @@ class BalanceList extends StatelessWidget {
                                 symbol: currencies[data.item3]['symbol'],
                               ).format(data.item2[i].balance / 100),
                               style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
+                                fontSize: 20,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -216,9 +219,9 @@ class BalanceList extends StatelessWidget {
                           symbol: currencies[groups.selectedGroup.currency]
                               ['symbol'],
                         ).format(member.balance / 100),
-                        style: theme.textTheme.bodyText2.copyWith(
+                        style: theme.textTheme.button.copyWith(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     );

@@ -399,6 +399,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: Text(
                                   data.item2,
                                   maxLines: 1,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
                               ),
                             ],

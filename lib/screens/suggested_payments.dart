@@ -216,9 +216,9 @@ class _SuggestedPaymentsScreenState extends State<SuggestedPaymentsScreen> {
                           name: payment['currency'],
                           symbol: currencies[payment['currency']]['symbol'],
                         ).format(payment['amount'] / 100),
-                        style: Theme.of(context).textTheme.bodyText2.copyWith(
+                        style: Theme.of(context).textTheme.button.copyWith(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                       ),
                     ),

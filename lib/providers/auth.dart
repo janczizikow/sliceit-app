@@ -7,6 +7,7 @@ import 'package:sliceit/models/tokens.dart';
 import 'package:sliceit/services/navigation_service.dart';
 import 'package:sliceit/utils/config.dart';
 import 'package:sliceit/utils/error_message_formatter.dart';
+import 'package:sliceit/utils/google_sign_in.dart';
 
 enum AuthStatus {
   UNINITIALIZED,
@@ -158,6 +159,7 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
 
   Future<void> logout() async {
     await _storage.deleteAll();
+    await googleSignIn.disconnect();
     _setTokens(accessToken: null, refreshToken: null);
     _navigationService.reset();
   }

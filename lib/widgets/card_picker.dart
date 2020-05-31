@@ -19,7 +19,9 @@ class CardPicker extends StatelessWidget {
     return PlatformButton(
       android: (_) => MaterialRaisedButtonData(
         disabledColor: theme.cardColor,
-        disabledTextColor: theme.textTheme.button.color,
+        disabledTextColor: theme.brightness == Brightness.dark
+            ? theme.primaryTextTheme.button.color
+            : theme.textTheme.button.color,
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(Radius.zero),
         ),

@@ -259,6 +259,44 @@ class ExpensesProvider extends BaseProvider {
     }
   }
 
+  Future<void> createManyPayments(List<Map<String, dynamic>> payments) async {
+    assert(_groupsProvider != null);
+    status = Status.PENDING;
+    try {
+      for (Map<String, dynamic> payment in payments) {
+        String groupId = payment['groupId'];
+
+        final Expense newPayment = await _api.createPayment(
+          groupId: payment['groupId'],
+          amount: payment['amount'],
+          from: payment['from'].userId,
+          to: payment['to'].userId,
+          currency: payment['currency'],
+          date: payment['date'],
+        );
+
+        if (_expensesByGroupId.containsKey(groupId)) {
+          _expensesByGroupId[groupId].insert(0, newPayment);
+        } else {
+          _expensesByGroupId[groupId] = [newPayment];
+        }
+
+        _groupsProvider.selectedGroup.optimisticBalanceUpdate(
+          payment['amount'],
+          [
+            Share(userId: payment['from'].userId, amount: 0),
+            Share(userId: payment['to'].userId, amount: payment['amount'])
+          ],
+          payment['from'].userId,
+        );
+      }
+      status = Status.RESOLVED;
+    } catch (e) {
+      status = Status.REJECTED;
+      rethrow;
+    }
+  }
+
   Future<void> deleteExpense(String expenseId) async {
     status = Status.PENDING;
 

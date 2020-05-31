@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
 import 'package:sliceit/screens/notifications.dart';
+import 'package:sliceit/screens/passcode_settings.dart';
 import 'package:sliceit/widgets/dialog.dart';
 import 'package:tuple/tuple.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -150,6 +151,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    Auth auth = Provider.of<Auth>(context, listen: false);
+    auth.disablePasscodeLock = true;
     _image = await ImagePicker.pickImage(source: source);
     setState(() {});
 
@@ -158,6 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     if (_image == null) {
+      auth.disablePasscodeLock = false;
       return;
     }
 
@@ -181,6 +185,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // setState(() => _image = null);
     } catch (e) {
       // ignore
+    } finally {
+      auth.disablePasscodeLock = false;
     }
   }
 
@@ -393,6 +399,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: Text(
                                   data.item2,
                                   maxLines: 1,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
                               ),
                             ],
@@ -445,9 +454,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       .pushNamed(NotificationsScreen.routeName),
                 ),
                 const Divider(height: 1),
-                const ListTile(
+                ListTile(
                   leading: const Icon(Icons.lock_outline),
                   title: const Text('Passcode Lock'),
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(PasscodeSettingsScreen.routeName),
                 ),
                 const Divider(height: 1),
                 const ListTile(

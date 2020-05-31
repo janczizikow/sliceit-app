@@ -142,7 +142,7 @@ class _GroupInvitesScreenState extends State<GroupInvitesScreen> {
                                     'No invites',
                                     style: Theme.of(context)
                                         .textTheme
-                                        .body2
+                                        .bodyText2
                                         .copyWith(fontSize: 18),
                                     textAlign: TextAlign.center,
                                   ),

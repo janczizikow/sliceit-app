@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 
 class Avatar extends StatelessWidget {
   final String initals;
@@ -26,7 +26,7 @@ class Avatar extends StatelessWidget {
           : Text(initals),
       backgroundColor: (avatar != null && avatar.isNotEmpty)
           ? Colors.transparent
-          : Theme.of(context).accentColor,
+          : Theme.of(context).primaryColorDark,
     );
   }
 }

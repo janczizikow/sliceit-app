@@ -163,9 +163,9 @@ class _ExpensesListState extends State<ExpensesList> {
                                       ['symbol'],
                                 ).format(expense.amount / 100),
                                 style:
-                                    Theme.of(context).textTheme.body2.copyWith(
+                                    Theme.of(context).textTheme.button.copyWith(
                                           fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w600,
                                         ),
                               ),
                             ),

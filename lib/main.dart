@@ -22,16 +22,34 @@ import 'package:sliceit/screens/edit_name.dart';
 import 'package:sliceit/screens/expense.dart';
 import 'package:sliceit/screens/forgot_password.dart';
 import 'package:sliceit/screens/group_invites.dart';
+import 'package:sliceit/screens/lock.dart';
 import 'package:sliceit/screens/login.dart';
 import 'package:sliceit/screens/notifications.dart';
+import 'package:sliceit/screens/passcode_settings.dart';
 import 'package:sliceit/screens/payment.dart';
+import 'package:sliceit/screens/pin_code.dart';
 import 'package:sliceit/screens/register.dart';
 import 'package:sliceit/screens/root.dart';
 import 'package:sliceit/screens/settings.dart';
+import 'package:sliceit/screens/suggested_payments.dart';
 import 'package:sliceit/services/api.dart';
 import 'package:sliceit/services/navigation_service.dart';
 import 'package:sliceit/widgets/no_animation_material_page_route.dart';
 import 'package:tuple/tuple.dart';
+
+Future<dynamic> backgroundMessageHandler(Map<String, dynamic> message) {
+  if (message.containsKey('data')) {
+    // Handle data message
+    final dynamic data = message['data'];
+  }
+
+  if (message.containsKey('notification')) {
+    // Handle notification message
+    final dynamic notification = message['notification'];
+  }
+
+  // Or do other work.
+}
 
 Future<Null> main() async {
   await DotEnv().load('.env');
@@ -51,9 +69,9 @@ Future<Null> main() async {
   // This creates a [Zone] that contains the Flutter application and establishes
   // an error handler that captures errors and reports them.
   // https://api.dartlang.org/stable/1.24.2/dart-async/Zone-class.html
-  runZoned<Future<Null>>(() async {
+  runZonedGuarded<Future<Null>>(() async {
     runApp(new MyApp(prefs));
-  }, onError: (error, stackTrace) async {
+  }, (error, stackTrace) async {
     if (!kReleaseMode) {
       print(stackTrace);
       print('In dev mode. Not sending report to Sentry.io.');
@@ -74,9 +92,9 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   static final NavigationService _navigationService = NavigationService();
-  static final Auth _auth = Auth(_navigationService);
+  Auth _auth;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -85,10 +103,33 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _auth = Auth(_navigationService, widget.prefs);
+    WidgetsBinding.instance.addObserver(this);
     _firebaseMessaging.getToken().then((String token) {
       _fcmRegistrationToken.value = token ?? '';
     });
     initializeNotifications();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      final context = _navigationService.navigationKey.currentContext;
+      Auth auth = Provider.of<Auth>(context, listen: false);
+      if (auth.isPasscodeEnabled && !auth.disablePasscodeLock) {
+        _navigationService.navigationKey.currentState.pushNamed(
+          LockScreen.routeName,
+          arguments: LockScreenArguments(popIfValid: true),
+        );
+      }
+    }
   }
 
   Future<void> initializeNotifications() async {
@@ -109,6 +150,7 @@ class _MyAppState extends State<MyApp> {
       },
       onLaunch: (Map<String, dynamic> message) async {},
       onResume: (Map<String, dynamic> message) async {},
+      onBackgroundMessage: backgroundMessageHandler,
     );
   }
 
@@ -189,6 +231,16 @@ class _MyAppState extends State<MyApp> {
           builder: (context) => ForgotPasswordScreen(),
           settings: settings,
         );
+      case SuggestedPaymentsScreen.routeName:
+        final SuggestedPaymentsScreenArguments args = settings.arguments;
+        return platformPageRoute(
+          context: context,
+          builder: (context) => SuggestedPaymentsScreen(
+            groupId: args.groupId,
+          ),
+          settings: settings,
+          fullscreenDialog: true,
+        );
       case EditGroupScreen.routeName:
         return platformPageRoute(
           context: context,
@@ -246,6 +298,34 @@ class _MyAppState extends State<MyApp> {
           builder: (context) => NotificationsScreen(),
           settings: settings,
         );
+      case PasscodeSettingsScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => PasscodeSettingsScreen(),
+          settings: settings,
+        );
+      case PinCodeScreen.routeName:
+        return platformPageRoute(
+          context: context,
+          builder: (context) => PinCodeScreen(),
+          settings: settings,
+        );
+      case LockScreen.routeName:
+        final LockScreenArguments args = settings.arguments;
+        return Theme.of(context).platform == TargetPlatform.iOS
+            ? CupertinoPageRoute(
+                builder: (context) => LockScreen(
+                  popIfValid: args?.popIfValid ?? false,
+                ),
+                settings: settings,
+                fullscreenDialog: true,
+              )
+            : NoAnimationMaterialPageRoute(
+                builder: (context) => LockScreen(
+                  popIfValid: args?.popIfValid ?? false,
+                ),
+                settings: settings,
+              );
       default:
         return null;
     }
@@ -259,7 +339,7 @@ class _MyAppState extends State<MyApp> {
           create: (_) => ThemeProvider(widget.prefs)..loadPreferredTheme(),
         ),
         ChangeNotifierProvider<Auth>(
-          create: (_) => _auth..restoreTokens(),
+          create: (_) => _auth..initialize(),
         ),
         Provider<Api>(
           create: (_) => Api(_auth),

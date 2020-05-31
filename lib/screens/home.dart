@@ -152,7 +152,9 @@ class _AndroidHome extends StatelessWidget {
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white,
             indicator: TabBarIndicator(
-              color: theme.primaryColorLight.withOpacity(0.3),
+              color: theme.primaryColorLight.withOpacity(
+                theme.brightness == Brightness.dark ? 0.3 : 0.5,
+              ),
             ),
             tabs: _tabs,
           ),

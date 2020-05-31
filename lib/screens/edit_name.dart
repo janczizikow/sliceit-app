@@ -106,8 +106,8 @@ class _EditNameState extends State<EditNameScreen> {
         title: const Text('Edit Name'),
         trailingActions: <Widget>[
           PlatformIconButton(
-            iosIcon: Icon(CupertinoIcons.check_mark),
-            androidIcon: Icon(Icons.check),
+            iosIcon: const Icon(CupertinoIcons.check_mark),
+            androidIcon: const Icon(Icons.check),
             onPressed: _isLoading ? null : _editName,
           ),
         ],

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 final BaseOptions dioBaseOptions = BaseOptions(
   baseUrl: kReleaseMode
       ? 'https://www.sliceitapp.com/api/v1'
-      : 'http://192.168.178.111:3000/api/v1',
+      : 'http://10.5.49.17:3000/api/v1',
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',

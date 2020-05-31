@@ -195,7 +195,9 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
 
   Future<void> logout() async {
     await _storage.deleteAll();
-    await googleSignIn.disconnect();
+    try {
+      await googleSignIn.disconnect();
+    } catch (e) {}
     _setTokens(accessToken: null, refreshToken: null);
     _pin = null;
     _biometricAuthEnabled = false;

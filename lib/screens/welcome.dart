@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -15,11 +17,13 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   GoogleSignInAccount _currentUser;
+  StreamSubscription<GoogleSignInAccount> _subscription;
 
   @override
   initState() {
     super.initState();
-    googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+    _subscription =
+        googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
       });
@@ -27,14 +31,30 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (_currentUser != null) {
         _onGoogleSignInSuccess();
       }
+    }, onError: (error) {
+      showErrorDialog(
+        context,
+        error?.message ?? 'Failed to authenticate with Google',
+      );
     });
+  }
+
+  @override
+  void dispose() {
+    if (_subscription != null) {
+      _subscription.cancel();
+    }
+    super.dispose();
   }
 
   Future<void> _handleGoogleSignIn() async {
     try {
       await googleSignIn.signIn();
     } catch (error) {
-      print(error);
+      showErrorDialog(
+        context,
+        error?.message ?? 'Failed to authenticate with Google',
+      );
     }
   }
 
@@ -44,9 +64,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       await Provider.of<Auth>(context, listen: false)
           .googleLogin(authInfo.idToken);
     } on AuthError catch (err) {
-      showErrorDialog(context, err.message);
+      showErrorDialog(
+          context, err?.message ?? 'Failed to authenticate with Google');
     } catch (err) {
-      showErrorDialog(context, err.message);
+      showErrorDialog(
+          context, err?.message ?? 'Failed to authenticate with Google');
     }
   }
 

@@ -120,6 +120,32 @@ class Auth with ChangeNotifier, ErrorMessageFormatter {
     }
   }
 
+  Future<void> googleLogin(String idToken) async {
+    _setStatus(AuthStatus.AUTHENTICATING);
+
+    try {
+      final response =
+          await _dio.post("/auth/google", data: {'idToken': idToken});
+      final Tokens tokens = Tokens.fromJson(response.data);
+      _setTokens(
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      );
+      _navigationService.replace('/');
+      _storeTokens(
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      );
+    } on DioError catch (e) {
+      _setStatus(AuthStatus.UNAUTHENTICATED);
+      if (e.response != null) {
+        throw AuthError(getErrorMessage(e.response.data));
+      } else {
+        rethrow;
+      }
+    }
+  }
+
   Future<void> register({
     @required String firstName,
     @required String lastName,
